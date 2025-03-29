@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Typography,
   List,
@@ -11,6 +11,7 @@ import {
 } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { PriceRule, ConditionGroup } from '../../types/pricing';
+import { priceRulesApi } from '../../services/api'; // Import the API service
 
 interface PricingRulesProps {
   availableRules: PriceRule[];
@@ -20,11 +21,40 @@ interface PricingRulesProps {
 
 const { Title, Text, Paragraph } = Typography;
 
-const PricingRules: React.FC<PricingRulesProps> = ({
-  availableRules,
-  selectedRules,
-  handleRuleToggle
+// Update the component to accept props
+const PricingRules: React.FC<PricingRulesProps> = ({ 
+  availableRules: propRules, 
+  selectedRules = [], 
+  handleRuleToggle 
 }) => {
+  const [availableRules, setAvailableRules] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRules = async () => {
+      try {
+        // Use the API service instead of direct fetch
+        const { data } = await priceRulesApi.getAll();
+        
+        // Make sure we're setting an array to state
+        setAvailableRules(Array.isArray(data) ? data : []);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load pricing rules');
+        setLoading(false);
+      }
+    };
+
+    // If props are provided, use them instead of fetching
+    if (propRules && propRules.length > 0) {
+      setAvailableRules(propRules);
+      setLoading(false);
+    } else {
+      fetchRules();
+    }
+  }, [propRules]);
+
   // Helper function to render condition logic in a readable format
   const renderConditionLogic = (group: ConditionGroup): React.ReactElement => {
     return (
@@ -64,7 +94,7 @@ const PricingRules: React.FC<PricingRulesProps> = ({
       ) : (
         <List
           itemLayout="horizontal"
-          dataSource={availableRules.filter(rule => rule.active)}
+          dataSource={Array.isArray(availableRules) ? availableRules.filter(rule => rule.active) : []}
           renderItem={(rule) => (
             <List.Item 
               key={rule.id}

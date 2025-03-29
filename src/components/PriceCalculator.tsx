@@ -3,23 +3,12 @@ import {
   Card, 
   Button, 
   Typography, 
-  Input, 
   Select, 
-  Form, 
-  InputNumber, 
   Space, 
-  Spin, 
   Divider, 
-  Alert, 
-  Row, 
-  Col 
-} from 'antd';
+  Alert} from 'antd';
 import { 
-  CarOutlined, 
-  CalculatorOutlined, 
-  UserOutlined, 
-  EnvironmentOutlined 
-} from '@ant-design/icons';
+  CalculatorOutlined} from '@ant-design/icons';
 import { Product, PriceRule, PriceCalculationResult } from '../types/pricing';
 import { calculatePrice, priceRulesApi } from '../services/api';
 import { evaluateConditionGroup } from '../utils/conditionEvaluator';

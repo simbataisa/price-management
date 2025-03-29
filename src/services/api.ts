@@ -62,16 +62,24 @@ import prisma from './database';
 // Example of updated API service
 export const priceRulesApi = {
   getAll: async () => {
-    const rules = await prisma.combo.findMany({
-      include: {
-        items: {
-          include: {
-            product: true
+    // Check if we're running on the server side
+    if (typeof window === 'undefined') {
+      const rules = await prisma.combo.findMany({
+        include: {
+          items: {
+            include: {
+              product: true
+            }
           }
         }
-      }
-    });
-    return { data: rules };
+      });
+      return { data: rules };
+    } else {
+      // If we're in the browser, use fetch to call an API endpoint
+      const response = await fetch('/api/price-rules');
+      const data = await response.json();
+      return { data };
+    }
   },
   
   getById: (id: string) => Promise.resolve({ 

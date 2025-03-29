@@ -103,11 +103,31 @@ const mockCombos: Combo[] = [
 const { Title } = Typography;
 
 const ComboList: React.FC = () => {
-  const [combos, setCombos] = useState<Combo[]>(mockCombos);
-  const [error, _setError] = useState<string | null>(null);
+  const [combos, setCombos] = useState<Combo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { showLoading, hideLoading } = useLoading();
   
+  // Fetch combos from API
+  useEffect(() => {
+    const fetchCombos = async () => {
+      try {
+        const response = await fetch('/api/combos');
+        const data = await response.json();
+        
+        // Make sure we're setting an array to state
+        setCombos(Array.isArray(data) ? data : []);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load combo packages');
+        setLoading(false);
+      }
+    };
+
+    fetchCombos();
+  }, []);
+
   // Keep the useEffect for hiding loading
   useEffect(() => {
     return () => {
@@ -123,12 +143,23 @@ const ComboList: React.FC = () => {
     }, 300);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     showLoading();
-    setTimeout(() => {
-      setCombos(combos.filter(combo => combo.id !== id));
+    try {
+      const response = await fetch(`/api/combos/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setCombos(combos.filter(combo => combo.id !== id));
+      } else {
+        setError('Failed to delete combo package');
+      }
+    } catch (err) {
+      setError('Error deleting combo package');
+    } finally {
       hideLoading();
-    }, 300);
+    }
   };
 
   // Keep utility functions
@@ -243,6 +274,7 @@ const ComboList: React.FC = () => {
         dataSource={combos} 
         rowKey="id"
         pagination={{ pageSize: 10 }}
+        loading={loading}
       />
     </Card>
   );

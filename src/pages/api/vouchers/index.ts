@@ -7,19 +7,11 @@ export default async function handler(
 ) {
   if (req.method === 'GET') {
     try {
-      const combos = await prisma.combo.findMany({
-        include: {
-          items: {
-            include: {
-              product: true
-            }
-          }
-        }
-      });
-      res.status(200).json(combos);
+      const vouchers = await prisma.voucher.findMany();
+      res.status(200).json(vouchers);
     } catch (error) {
-      console.error('Error fetching combos:', error);
-      res.status(500).json({ error: 'Failed to fetch combos', details: error });
+      console.error('Error fetching vouchers:', error);
+      res.status(500).json({ error: 'Failed to fetch vouchers' });
     }
   } else {
     res.setHeader('Allow', ['GET']);

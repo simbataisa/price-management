@@ -5,7 +5,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  transpilePackages: ['rc-util', 'antd', '@ant-design', 'rc-pagination', 'rc-picker'],
+  transpilePackages: ['rc-util', 'antd', '@ant-design', 'rc-pagination', 'rc-picker', 'rc-tree'],
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -15,6 +15,20 @@ const nextConfig = {
         os: false,
       };
     }
+    
+    // Add support for importing without extensions
+    config.resolve.extensionAlias = {
+      '.js': ['.js', '.ts', '.tsx'],
+      '.mjs': ['.mjs', '.mts', '.mtsx'],
+      '.cjs': ['.cjs', '.cts', '.ctsx'],
+    };
+    
+    // Add specific alias for rc-util warning module
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'rc-util/es/warning': require.resolve('rc-util/es/warning.js')
+    };
+    
     return config;
   },
 }

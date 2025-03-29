@@ -1,5 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 
+// Add this type declaration for the global variable
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
 // Initialize Prisma client
 let prisma: PrismaClient;
 
