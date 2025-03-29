@@ -118,7 +118,7 @@ export const calculatePrice = (
   );
   
   // Base price calculation
-  let basePrice = product.basePrice * duration;
+  const basePrice = product.basePrice * duration;
   let finalPrice = basePrice;
   
   // Track applied rules and breakdown

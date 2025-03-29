@@ -3,10 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
+    // Ignore TypeScript errors during build
     ignoreBuildErrors: true,
   },
   transpilePackages: ['rc-util', 'antd', '@ant-design', 'rc-pagination', 'rc-picker', 'rc-tree'],
