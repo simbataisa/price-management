@@ -57,8 +57,23 @@ const mockRules: PriceRule[] = [
 ];
 
 // Mock API implementation
+import prisma from './database';
+
+// Example of updated API service
 export const priceRulesApi = {
-  getAll: () => Promise.resolve({ data: mockRules }),
+  getAll: async () => {
+    const rules = await prisma.combo.findMany({
+      include: {
+        items: {
+          include: {
+            product: true
+          }
+        }
+      }
+    });
+    return { data: rules };
+  },
+  
   getById: (id: string) => Promise.resolve({ 
     data: mockRules.find(rule => rule.id === id) || mockRules[0] 
   }),
