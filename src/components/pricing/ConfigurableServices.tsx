@@ -1,12 +1,14 @@
 import React from 'react';
 import {
   Typography,
-  Box,
   Card,
-  FormControlLabel,
   Checkbox,
-  Chip
-} from '@mui/material';
+  Tag,
+  Space,
+  Slider,
+  Divider
+} from 'antd';
+import { SettingOutlined } from '@ant-design/icons';
 import { ServiceOption } from '../../types/pricing';
 
 interface ConfigurableServicesProps {
@@ -17,6 +19,8 @@ interface ConfigurableServicesProps {
   handleServiceValueChange: (serviceId: string, value: number) => void;
 }
 
+const { Title, Text } = Typography;
+
 const ConfigurableServices: React.FC<ConfigurableServicesProps> = ({
   serviceOptions,
   selectedServices,
@@ -26,61 +30,64 @@ const ConfigurableServices: React.FC<ConfigurableServicesProps> = ({
 }) => {
   return (
     <>
-      <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
-        Configurable Services
-      </Typography>
+      <Title level={5} style={{ marginTop: 24, marginBottom: 8 }}>
+        <SettingOutlined /> Configurable Services
+      </Title>
       
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Space direction="vertical" style={{ width: '100%' }}>
         {serviceOptions.map(service => (
-          <Card key={service.id} sx={{ p: 2, border: selectedServices.includes(service.id) ? '1px solid #1976d2' : '1px solid #e0e0e0' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <FormControlLabel
-                control={
-                  <Checkbox 
-                    checked={selectedServices.includes(service.id)}
-                    onChange={() => handleServiceToggle(service.id)}
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography variant="subtitle1">{service.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">{service.description}</Typography>
-                  </Box>
-                }
-              />
-              <Chip 
-                label={service.type === 'fixed' 
+          <Card 
+            key={service.id} 
+            style={{ 
+              borderColor: selectedServices.includes(service.id) ? '#1890ff' : '#f0f0f0',
+              marginBottom: 8
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <Checkbox 
+                  checked={selectedServices.includes(service.id)}
+                  onChange={() => handleServiceToggle(service.id)}
+                >
+                  <Text strong>{service.name}</Text>
+                </Checkbox>
+                <div style={{ marginLeft: 24 }}>
+                  <Text type="secondary">{service.description}</Text>
+                </div>
+              </div>
+              <Tag 
+                color={selectedServices.includes(service.id) ? "blue" : "default"}
+              >
+                {service.type === 'fixed' 
                   ? `$${serviceValues[service.id]}` 
                   : `${serviceValues[service.id]}%`
-                } 
-                color="primary" 
-                variant={selectedServices.includes(service.id) ? "filled" : "outlined"}
-              />
-            </Box>
+                }
+              </Tag>
+            </div>
             
             {service.configurable && selectedServices.includes(service.id) && (
-              <Box sx={{ mt: 2, px: 2 }}>
-                <Typography variant="body2" gutterBottom>
+              <div style={{ marginTop: 16, paddingLeft: 24 }}>
+                <Divider style={{ margin: '8px 0' }} />
+                <Text>
                   Adjust {service.type === 'fixed' ? 'fee' : 'rate'}:
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography variant="body2">{service.minValue}</Typography>
-                  <input
-                    type="range"
+                </Text>
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: 8 }}>
+                  <Text type="secondary" style={{ marginRight: 12 }}>{service.minValue}</Text>
+                  <Slider
                     min={service.minValue}
                     max={service.maxValue}
                     step={service.valueStep}
                     value={serviceValues[service.id]}
-                    onChange={(e) => handleServiceValueChange(service.id, Number(e.target.value))}
-                    style={{ flexGrow: 1 }}
+                    onChange={(value) => handleServiceValueChange(service.id, value)}
+                    style={{ flex: 1 }}
                   />
-                  <Typography variant="body2">{service.maxValue}</Typography>
-                </Box>
-              </Box>
+                  <Text type="secondary" style={{ marginLeft: 12 }}>{service.maxValue}</Text>
+                </div>
+              </div>
             )}
           </Card>
         ))}
-      </Box>
+      </Space>
     </>
   );
 };

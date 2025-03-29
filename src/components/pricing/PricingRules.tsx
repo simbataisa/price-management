@@ -2,16 +2,14 @@ import React from 'react';
 import {
   Typography,
   List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Box,
-  Chip,
+  Card,
+  Tag,
   Tooltip,
-  IconButton,
-  Paper
-} from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
+  Button,
+  Space,
+  Empty
+} from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { PriceRule, ConditionGroup } from '../../types/pricing';
 
 interface PricingRulesProps {
@@ -19,6 +17,8 @@ interface PricingRulesProps {
   selectedRules: string[];
   handleRuleToggle: (ruleId: string) => void;
 }
+
+const { Title, Text, Paragraph } = Typography;
 
 const PricingRules: React.FC<PricingRulesProps> = ({
   availableRules,
@@ -28,106 +28,94 @@ const PricingRules: React.FC<PricingRulesProps> = ({
   // Helper function to render condition logic in a readable format
   const renderConditionLogic = (group: ConditionGroup): React.ReactElement => {
     return (
-      <Box sx={{ ml: 2 }}>
-        <Typography variant="body2" fontWeight="bold">
+      <div style={{ marginLeft: 16 }}>
+        <Text strong>
           {group.logic}
-        </Typography>
-        <Box sx={{ ml: 2 }}>
+        </Text>
+        <div style={{ marginLeft: 16 }}>
           {group.conditions.map((cond, idx) => {
             if ('logic' in cond) {
               return (
-                <Box key={idx} sx={{ mt: 1 }}>
+                <div key={idx} style={{ marginTop: 8 }}>
                   {renderConditionLogic(cond as ConditionGroup)}
-                </Box>
+                </div>
               );
             } else {
               const condition = cond as any;
               return (
-                <Typography key={idx} variant="body2">
+                <Text key={idx}>
                   {condition.type} {condition.operator || '='} {String(condition.value)}
-                </Typography>
+                </Text>
               );
             }
           })}
-        </Box>
-      </Box>
+        </div>
+      </div>
     );
   };
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
+    <Card>
+      <Title level={5}>
         Applicable Pricing Rules
-      </Typography>
+      </Title>
       {availableRules.length === 0 ? (
-        <Typography variant="body1" color="text.secondary">
-          No pricing rules available. Add rules in the Pricing Rules tab.
-        </Typography>
+        <Empty description="No pricing rules available. Add rules in the Pricing Rules tab." />
       ) : (
-        <List>
-          {availableRules.filter(rule => rule.active).map((rule) => (
-            <ListItem 
+        <List
+          itemLayout="horizontal"
+          dataSource={availableRules.filter(rule => rule.active)}
+          renderItem={(rule) => (
+            <List.Item 
               key={rule.id}
-              disablePadding
-              sx={{ 
-                mb: 1,
-                borderRadius: 1,
+              style={{ 
+                marginBottom: 8,
+                padding: 0
               }}
             >
-              <ListItemButton
-                onClick={() => handleRuleToggle(rule.id)}
-                selected={selectedRules.includes(rule.id)}
-                sx={{ 
-                  border: '1px solid #eee',
-                  borderRadius: 1,
-                  bgcolor: selectedRules.includes(rule.id) ? 'rgba(0, 0, 255, 0.05)' : 'transparent',
+              <Card 
+                style={{ 
+                  width: '100%',
+                  cursor: 'pointer',
+                  backgroundColor: selectedRules.includes(rule.id) ? '#f0f5ff' : 'white',
+                  borderColor: selectedRules.includes(rule.id) ? '#1890ff' : '#f0f0f0'
                 }}
+                bodyStyle={{ padding: '12px 16px' }}
+                onClick={() => handleRuleToggle(rule.id)}
               >
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {rule.name}
-                      <Chip 
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                  <Text strong>{rule.name}</Text>
+                  <Tag color="blue">Priority: {rule.priority}</Tag>
+                  <Tag color="purple">{rule.level}</Tag>
+                  {rule.value < 0 && (
+                    <Tag color="red">Surcharge</Tag>
+                  )}
+                  {rule.conditionLogic && (
+                    <Tooltip title={
+                      <div>
+                        {renderConditionLogic(rule.conditionLogic)}
+                      </div>
+                    }>
+                      <Button 
+                        type="text" 
                         size="small" 
-                        label={`Priority: ${rule.priority}`} 
-                        color="primary" 
-                        variant="outlined"
+                        icon={<InfoCircleOutlined />} 
+                        onClick={(e) => e.stopPropagation()}
                       />
-                      <Chip 
-                        size="small" 
-                        label={rule.level} 
-                        color="secondary" 
-                        variant="outlined"
-                      />
-                      {rule.value < 0 && (
-                        <Chip 
-                          size="small" 
-                          label="Surcharge" 
-                          color="error" 
-                          variant="outlined"
-                        />
-                      )}
-                      {rule.conditionLogic && (
-                        <Tooltip title={
-                          <Box>
-                            {renderConditionLogic(rule.conditionLogic)}
-                          </Box>
-                        }>
-                          <IconButton size="small">
-                            <InfoIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-                  }
-                  secondary={rule.description}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+                    </Tooltip>
+                  )}
+                </div>
+                {rule.description && (
+                  <Paragraph type="secondary" style={{ marginBottom: 0, marginTop: 4 }}>
+                    {rule.description}
+                  </Paragraph>
+                )}
+              </Card>
+            </List.Item>
+          )}
+        />
       )}
-    </Paper>
+    </Card>
   );
 };
 

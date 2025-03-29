@@ -1,14 +1,14 @@
 import React from 'react';
 import {
   Typography,
-  Box,
-  FormControlLabel,
   Checkbox,
-  FormControl,
-  InputLabel,
   Select,
-  MenuItem
-} from '@mui/material';
+  Form,
+  Space,
+  Row,
+  Col,
+} from 'antd';
+import { CarOutlined, HomeOutlined, GiftOutlined, UserOutlined } from '@ant-design/icons';
 
 interface AddOn {
   id: string;
@@ -31,6 +31,9 @@ interface AddOnsProps {
   setWeddingDecoration: (weddingDecoration: boolean) => void;
 }
 
+const { Title } = Typography;
+const { Option } = Select;
+
 const AddOns: React.FC<AddOnsProps> = ({
   addOns,
   handleAddOnToggle,
@@ -47,74 +50,88 @@ const AddOns: React.FC<AddOnsProps> = ({
 }) => {
   return (
     <>
-      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-        Add-on Services
-      </Typography>
+      <Title level={5} style={{ marginTop: 16, marginBottom: 8 }}>
+        <GiftOutlined /> Add-on Services
+      </Title>
       
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-        {availableAddOns.map(addOn => (
-          <FormControlLabel
-            key={addOn.id}
-            control={
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Row gutter={[16, 8]}>
+          {availableAddOns.map(addOn => (
+            <Col key={addOn.id} xs={24} sm={12} md={8}>
               <Checkbox 
                 checked={addOns.includes(addOn.id)}
                 onChange={() => handleAddOnToggle(addOn.id)}
-              />
-            }
-            label={`${addOn.name} (+$${addOn.price}/${rentalType === 'short-term' ? 'day' : 'month'})`}
-          />
-        ))}
-      </Box>
-      
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Pickup Location</InputLabel>
-        <Select
-          value={pickupLocation}
-          label="Pickup Location"
-          onChange={(e) => setPickupLocation(e.target.value)}
-        >
-          <MenuItem value="office">Rental Office</MenuItem>
-          <MenuItem value="airport">Airport</MenuItem>
-          <MenuItem value="hotel">Hotel</MenuItem>
-          <MenuItem value="custom">Custom Address (+$25)</MenuItem>
-        </Select>
-      </FormControl>
-      
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Return Location</InputLabel>
-        <Select
-          value={returnLocation}
-          label="Return Location"
-          onChange={(e) => setReturnLocation(e.target.value)}
-        >
-          <MenuItem value="office">Rental Office</MenuItem>
-          <MenuItem value="airport">Airport</MenuItem>
-          <MenuItem value="hotel">Hotel</MenuItem>
-          <MenuItem value="custom">Custom Address</MenuItem>
-        </Select>
-      </FormControl>
-      
-      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-        <FormControlLabel
-          control={
-            <Checkbox 
-              checked={withDriver}
-              onChange={(e) => setWithDriver(e.target.checked)}
-            />
-          }
-          label="Include Professional Driver (+30%)"
-        />
+              >
+                {addOn.name} (+${addOn.price}/{rentalType === 'short-term' ? 'day' : 'month'})
+              </Checkbox>
+            </Col>
+          ))}
+        </Row>
         
-        <FormControlLabel
-          control={
-            <Checkbox 
-              checked={weddingDecoration}
-              onChange={(e) => setWeddingDecoration(e.target.checked)}
-            />
-          }
-          label="Wedding Decoration (+$120)"
-        />
-      </Box>
+        <Form layout="vertical">
+          <Row gutter={16}>
+            <Col xs={24} md={12}>
+              <Form.Item label="Pickup Location">
+                <Select
+                  value={pickupLocation}
+                  onChange={(value) => setPickupLocation(value)}
+                  style={{ width: '100%' }}
+                >
+                  <Option value="office">Rental Office</Option>
+                  <Option value="airport">Airport</Option>
+                  <Option value="hotel">Hotel</Option>
+                  <Option value="custom">Custom Address (+$25)</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item label="Return Location">
+                <Select
+                  value={returnLocation}
+                  onChange={(value) => setReturnLocation(value)}
+                  style={{ width: '100%' }}
+                >
+                  <Option value="office">Rental Office</Option>
+                  <Option value="airport">Airport</Option>
+                  <Option value="hotel">Hotel</Option>
+                  <Option value="custom">Custom Address</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Row gutter={16}>
+            <Col xs={24} md={12}>
+              <Form.Item>
+                <Checkbox 
+                  checked={withDriver}
+                  onChange={(e) => setWithDriver(e.target.checked)}
+                >
+                  <Space>
+                    <UserOutlined />
+                    <span>Include Professional Driver (+30%)</span>
+                  </Space>
+                </Checkbox>
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item>
+                <Checkbox 
+                  checked={weddingDecoration}
+                  onChange={(e) => setWeddingDecoration(e.target.checked)}
+                >
+                  <Space>
+                    <GiftOutlined />
+                    <span>Wedding Decoration (+$120)</span>
+                  </Space>
+                </Checkbox>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Space>
     </>
   );
 };

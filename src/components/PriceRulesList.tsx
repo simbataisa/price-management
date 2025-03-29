@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
-  Alert
-} from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { 
+  Card, 
+  Typography, 
+  Button, 
+  Table, 
+  Space, 
+  Tag, 
+  Popconfirm, 
+  Alert, 
+  Spin 
+} from 'antd';
+import { 
+  EditOutlined, 
+  DeleteOutlined, 
+  PlusOutlined 
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { PriceRule } from '../types/pricing';
 import { priceRulesApi } from '../services/api';
+
+const { Title } = Typography;
 
 const PriceRulesList: React.FC = () => {
   const [rules, setRules] = useState<PriceRule[]>([]);
@@ -41,95 +43,119 @@ const PriceRulesList: React.FC = () => {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this rule?')) {
-      try {
-        await priceRulesApi.delete(id);
-        setRules(rules.filter(rule => rule.id !== id));
-      } catch (err) {
-        setError('Failed to delete rule');
-      }
+    try {
+      await priceRulesApi.delete(id);
+      setRules(rules.filter(rule => rule.id !== id));
+    } catch (err) {
+      setError('Failed to delete rule');
     }
   };
 
+  const columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
+      render: (type: string) => (
+        <Tag color={type === 'percentage' ? 'blue' : type === 'fixed' ? 'green' : 'purple'}>
+          {type === 'percentage' ? 'Percentage' : 
+           type === 'fixed' ? 'Fixed Amount' : 'Bulk Discount'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Value',
+      dataIndex: 'value',
+      key: 'value',
+      render: (value: number, record: PriceRule) => (
+        <span>
+          {record.type === 'percentage' ? `${value}%` : `$${value}`}
+        </span>
+      ),
+    },
+    {
+      title: 'Status',
+      key: 'active',
+      dataIndex: 'active',
+      render: (active: boolean) => (
+        <Tag color={active ? 'success' : 'default'}>
+          {active ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Priority',
+      dataIndex: 'priority',
+      key: 'priority',
+    },
+    {
+      title: 'Level',
+      dataIndex: 'level',
+      key: 'level',
+      render: (level: string) => (
+        <Tag color="processing">{level}</Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_: any, record: PriceRule) => (
+        <Space size="middle">
+          <Button 
+            type="text" 
+            icon={<EditOutlined />} 
+            onClick={() => navigate(`/rules/edit/${record.id}`)}
+          />
+          <Popconfirm
+            title="Are you sure you want to delete this rule?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button 
+              type="text" 
+              danger 
+              icon={<DeleteOutlined />} 
+            />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">Pricing Rules</Typography>
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Title level={4}>Pricing Rules</Title>
         <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
+          type="primary" 
+          icon={<PlusOutlined />}
           onClick={() => navigate('/rules/new')}
         >
           Add New Rule
         </Button>
-      </Box>
+      </div>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
 
       {loading ? (
-        <Typography>Loading rules...</Typography>
+        <div style={{ textAlign: 'center', padding: 24 }}>
+          <Spin size="large" />
+        </div>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Value</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Priority</TableCell>
-                <TableCell>Level</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rules.map((rule) => (
-                <TableRow key={rule.id}>
-                  <TableCell>{rule.name}</TableCell>
-                  <TableCell>
-                    {rule.type === 'percentage' ? 'Percentage' : 
-                     rule.type === 'fixed' ? 'Fixed Amount' : 'Bulk Discount'}
-                  </TableCell>
-                  <TableCell>
-                    {rule.type === 'percentage' ? `${rule.value}%` : `$${rule.value}`}
-                  </TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={rule.active ? 'Active' : 'Inactive'} 
-                      color={rule.active ? 'success' : 'default'} 
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>{rule.priority}</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={rule.level} 
-                      color="primary" 
-                      variant="outlined" 
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <IconButton 
-                      size="small" 
-                      onClick={() => navigate(`/rules/edit/${rule.id}`)}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleDelete(rule.id)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Table 
+          columns={columns} 
+          dataSource={rules} 
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+        />
       )}
-    </Box>
+    </Card>
   );
 };
 

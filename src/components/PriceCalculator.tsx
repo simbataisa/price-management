@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Paper, 
+  Card, 
   Button, 
-  Box, 
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  InputAdornment,
-  Grid,
-  CircularProgress,
-  Divider,
-  Alert
-} from '@mui/material';
+  Typography, 
+  Input, 
+  Select, 
+  Form, 
+  InputNumber, 
+  Space, 
+  Spin, 
+  Divider, 
+  Alert, 
+  Row, 
+  Col 
+} from 'antd';
+import { 
+  CarOutlined, 
+  CalculatorOutlined, 
+  UserOutlined, 
+  EnvironmentOutlined 
+} from '@ant-design/icons';
 import { Product, PriceRule, PriceCalculationResult } from '../types/pricing';
 import { calculatePrice, priceRulesApi } from '../services/api';
 import { evaluateConditionGroup } from '../utils/conditionEvaluator';
@@ -31,12 +34,17 @@ import CalculationResult from './pricing/CalculationResult';
 // Import data
 import { serviceOptions as defaultServiceOptions } from '../data/serviceOptions';
 import { availableAddOns, carModels } from '../data/rentalData';
+import { useLoading } from '../contexts/LoadingContext';
+
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 const PriceCalculator: React.FC = () => {
   // Add state for available rules from API
   const [availableRules, setAvailableRules] = useState<PriceRule[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { showLoading, hideLoading } = useLoading();
   
   // Car rental specific states
   const [rentalType, setRentalType] = useState<'short-term' | 'long-term'>('short-term');
@@ -129,6 +137,7 @@ const PriceCalculator: React.FC = () => {
 
   const calculateFinalPrice = () => {
     setLoading(true);
+    showLoading();
     setError(null);
     
     try {
@@ -243,88 +252,85 @@ const PriceCalculator: React.FC = () => {
       setError('Failed to calculate price. Please try again.');
     } finally {
       setLoading(false);
+      hideLoading();
     }
   };
 
   return (
-    <Card sx={{ maxWidth: '100%', overflow: 'hidden' }}>
-      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-        <Typography variant="h5" gutterBottom>
-          Price Calculator
-        </Typography>
-        
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <Paper sx={{ p: { xs: 2, sm: 3 } }}>
-            <RentalOptions
-              rentalType={rentalType}
-              setRentalType={setRentalType}
-              carDetails={carDetails}
-              setCarDetails={setCarDetails}
-              duration={duration}
-              setDuration={setDuration}
-              route={route}
-              setRoute={setRoute}
-              customerType={customerType}
-              setCustomerType={setCustomerType}
-              carQuantity={carQuantity}
-              setCarQuantity={setCarQuantity}
-              carModels={carModels}
-            />
-            
-            <AddOns
-              addOns={addOns}
-              handleAddOnToggle={handleAddOnToggle}
-              availableAddOns={availableAddOns}
-              rentalType={rentalType}
-              pickupLocation={pickupLocation}
-              setPickupLocation={setPickupLocation}
-              returnLocation={returnLocation}
-              setReturnLocation={setReturnLocation}
-              withDriver={withDriver}
-              setWithDriver={setWithDriver}
-              weddingDecoration={weddingDecoration}
-              setWeddingDecoration={setWeddingDecoration}
-            />
-            
-            <ConfigurableServices
-              serviceOptions={serviceOptions}
-              selectedServices={selectedServices}
-              serviceValues={serviceValues}
-              handleServiceToggle={handleServiceToggle}
-              handleServiceValueChange={handleServiceValueChange}
-            />
-            
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              gap: 2, 
-              mt: 3,
-              '& .MuiButton-root': {
-                width: { xs: '100%', sm: 'auto' }
-              }
-            }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={calculateFinalPrice}
-                disabled={loading}
-              >
-                {loading ? <CircularProgress size={24} /> : 'Calculate Price'}
-              </Button>
-            </Box>
-          </Paper>
+    <Card>
+      <Title level={4}>Price Calculator</Title>
+      <Divider />
+      
+      {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
+      
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Card title="Rental Options" type="inner">
+          <RentalOptions
+            rentalType={rentalType}
+            setRentalType={setRentalType}
+            carDetails={carDetails}
+            setCarDetails={setCarDetails}
+            duration={duration}
+            setDuration={setDuration}
+            route={route}
+            setRoute={setRoute}
+            customerType={customerType}
+            setCustomerType={setCustomerType}
+            carQuantity={carQuantity}
+            setCarQuantity={setCarQuantity}
+            carModels={carModels}
+          />
           
+          <AddOns
+            addOns={addOns}
+            handleAddOnToggle={handleAddOnToggle}
+            availableAddOns={availableAddOns}
+            rentalType={rentalType}
+            pickupLocation={pickupLocation}
+            setPickupLocation={setPickupLocation}
+            returnLocation={returnLocation}
+            setReturnLocation={setReturnLocation}
+            withDriver={withDriver}
+            setWithDriver={setWithDriver}
+            weddingDecoration={weddingDecoration}
+            setWeddingDecoration={setWeddingDecoration}
+          />
+          
+          <ConfigurableServices
+            serviceOptions={serviceOptions}
+            selectedServices={selectedServices}
+            serviceValues={serviceValues}
+            handleServiceToggle={handleServiceToggle}
+            handleServiceValueChange={handleServiceValueChange}
+          />
+          
+          <div style={{ marginTop: 16 }}>
+            <Button
+              type="primary"
+              icon={<CalculatorOutlined />}
+              onClick={calculateFinalPrice}
+              loading={loading}
+              size="large"
+            >
+              Calculate Price
+            </Button>
+          </div>
+        </Card>
+        
+        <Card title="Pricing Rules" type="inner">
           <PricingRules
             availableRules={availableRules}
             selectedRules={selectedRules}
             handleRuleToggle={handleRuleToggle}
           />
-          
-          {calculation && <CalculationResult calculation={calculation} />}
-        </Box>
-      </CardContent>
+        </Card>
+        
+        {calculation && (
+          <Card title="Calculation Result" type="inner">
+            <CalculationResult calculation={calculation} />
+          </Card>
+        )}
+      </Space>
     </Card>
   );
 };

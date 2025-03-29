@@ -1,15 +1,17 @@
 import React from 'react';
 import {
   Typography,
-  TextField,
-  FormControl,
-  InputLabel,
+  Form,
+  Input,
   Select,
-  MenuItem,
-  ToggleButtonGroup,
-  ToggleButton,
-  Box
-} from '@mui/material';
+  Radio,
+  InputNumber,
+  Space,
+  Card,
+  Row,
+  Col
+} from 'antd';
+import { CarOutlined, ClockCircleOutlined, UserOutlined } from '@ant-design/icons';
 
 interface CarModel {
   id: string;
@@ -37,6 +39,9 @@ interface RentalOptionsProps {
   carModels: CarModel[];
 }
 
+const { Title } = Typography;
+const { Option } = Select;
+
 const RentalOptions: React.FC<RentalOptionsProps> = ({
   rentalType,
   setRentalType,
@@ -54,112 +59,120 @@ const RentalOptions: React.FC<RentalOptionsProps> = ({
 }) => {
   return (
     <>
-      <Typography variant="h5" gutterBottom>
-        Car Rental Price Calculator
-      </Typography>
+      <Title level={5}>
+        <CarOutlined /> Car Rental Price Calculator
+      </Title>
       
-      <ToggleButtonGroup
+      <Radio.Group
         value={rentalType}
-        exclusive
-        onChange={(e, newValue) => newValue && setRentalType(newValue)}
-        sx={{ mb: 2, width: '100%' }}
+        onChange={(e) => setRentalType(e.target.value)}
+        style={{ marginBottom: 16, width: '100%' }}
+        buttonStyle="solid"
       >
-        <ToggleButton value="short-term" sx={{ width: '50%' }}>
+        <Radio.Button value="short-term" style={{ width: '50%', textAlign: 'center' }}>
           Short-term Rental
-        </ToggleButton>
-        <ToggleButton value="long-term" sx={{ width: '50%' }}>
+        </Radio.Button>
+        <Radio.Button value="long-term" style={{ width: '50%', textAlign: 'center' }}>
           Long-term Leasing
-        </ToggleButton>
-      </ToggleButtonGroup>
+        </Radio.Button>
+      </Radio.Group>
       
-      <Box component="form" sx={{ mt: 2 }}>
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Car Model</InputLabel>
+      <Form layout="vertical">
+        <Form.Item label="Car Model">
           <Select
             value={carDetails.model.toLowerCase()}
-            label="Car Model"
-            onChange={(e) => setCarDetails({
+            onChange={(value) => setCarDetails({
               ...carDetails,
-              model: e.target.value
+              model: value
             })}
+            style={{ width: '100%' }}
           >
             {carModels.map(model => (
-              <MenuItem key={model.id} value={model.id}>
+              <Option key={model.id} value={model.id}>
                 {model.name} (${model.basePrice}/{rentalType === 'short-term' ? 'day' : 'month'})
-              </MenuItem>
+              </Option>
             ))}
           </Select>
-        </FormControl>
+        </Form.Item>
         
-        <TextField
-          fullWidth
-          label="Year"
-          type="number"
-          value={carDetails.year}
-          onChange={(e) => setCarDetails({
-            ...carDetails,
-            year: Number(e.target.value)
-          })}
-          margin="normal"
-        />
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item label="Year">
+              <InputNumber
+                style={{ width: '100%' }}
+                value={carDetails.year}
+                onChange={(value) => setCarDetails({
+                  ...carDetails,
+                  year: value
+                })}
+                min={1990}
+                max={new Date().getFullYear()}
+              />
+            </Form.Item>
+          </Col>
+          
+          <Col span={12}>
+            <Form.Item label="Mileage">
+              <InputNumber
+                style={{ width: '100%' }}
+                value={carDetails.mileage}
+                onChange={(value) => setCarDetails({
+                  ...carDetails,
+                  mileage: value
+                })}
+                min={0}
+                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={(value) => value ? Number(value.replace(/\$\s?|(,*)/g, '')) : 0}
+                addonAfter="miles"
+              />
+            </Form.Item>
+          </Col>
+        </Row>
         
-        <TextField
-          fullWidth
-          label="Mileage"
-          type="number"
-          value={carDetails.mileage}
-          onChange={(e) => setCarDetails({
-            ...carDetails,
-            mileage: Number(e.target.value)
-          })}
-          margin="normal"
-        />
+        <Form.Item label={rentalType === 'short-term' ? 'Duration (Days)' : 'Duration (Months)'}>
+          <InputNumber
+            style={{ width: '100%' }}
+            value={duration}
+            onChange={(value) => setDuration(Number(value))}
+            min={1}
+            addonAfter={rentalType === 'short-term' ? 'days' : 'months'}
+          />
+        </Form.Item>
         
-        <TextField
-          fullWidth
-          label={rentalType === 'short-term' ? 'Duration (Days)' : 'Duration (Months)'}
-          type="number"
-          value={duration}
-          onChange={(e) => setDuration(Number(e.target.value))}
-          margin="normal"
-        />
-        
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Route Type</InputLabel>
+        <Form.Item label="Route Type">
           <Select
             value={route}
-            label="Route Type"
-            onChange={(e) => setRoute(e.target.value)}
+            onChange={(value) => setRoute(value)}
+            style={{ width: '100%' }}
           >
-            <MenuItem value="local">Local</MenuItem>
-            <MenuItem value="regional">Regional</MenuItem>
-            <MenuItem value="interstate">Interstate</MenuItem>
+            <Option value="local">Local</Option>
+            <Option value="regional">Regional</Option>
+            <Option value="interstate">Interstate</Option>
           </Select>
-        </FormControl>
+        </Form.Item>
         
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Customer Type</InputLabel>
+        <Form.Item label="Customer Type">
           <Select
             value={customerType}
-            label="Customer Type"
-            onChange={(e) => setCustomerType(e.target.value)}
+            onChange={(value) => setCustomerType(value)}
+            style={{ width: '100%' }}
           >
-            <MenuItem value="regular">Regular</MenuItem>
-            <MenuItem value="premium">Premium</MenuItem>
-            <MenuItem value="business">Business</MenuItem>
+            <Option value="regular">Regular</Option>
+            <Option value="premium">Premium</Option>
+            <Option value="business">Business</Option>
           </Select>
-        </FormControl>
+        </Form.Item>
         
-        <TextField
-          fullWidth
-          label="Number of Cars"
-          type="number"
-          value={carQuantity}
-          onChange={(e) => setCarQuantity(Math.max(1, Number(e.target.value)))}
-          margin="normal"
-          InputProps={{ inputProps: { min: 1 } }}
-        />
-      </Box>
+        <Form.Item label="Number of Cars">
+          <InputNumber
+            style={{ width: '100%' }}
+            value={carQuantity}
+            onChange={(value) => setCarQuantity(Math.max(1, Number(value)))}
+            min={1}
+            addonBefore={<CarOutlined />}
+          />
+        </Form.Item>
+      </Form>
     </>
   );
 };

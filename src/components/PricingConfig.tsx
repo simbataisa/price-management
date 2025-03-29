@@ -1,27 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
   Card,
-  CardContent,
   Typography,
-  TextField,
+  Input,
   Button,
   Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  Form,
   Alert,
-  CircularProgress,
   Switch,
-  FormControlLabel,
   Divider,
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+  DatePicker,
+  Space,
+  InputNumber,
+} from 'antd';
 import { PriceRule } from '../types/pricing';
 import { priceRulesApi } from '../services/api';
 import { useNavigate, useParams } from 'react-router-dom';
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
+const { Option } = Select;
 
 const PricingConfig: React.FC = () => {
   const [priceRule, setPriceRule] = useState<Partial<PriceRule>>({
@@ -33,9 +31,9 @@ const PricingConfig: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { id } = useParams();
+  const [form] = Form.useForm();
 
   useEffect(() => {
     if (id) {
@@ -43,46 +41,24 @@ const PricingConfig: React.FC = () => {
         try {
           const response = await priceRulesApi.getById(id);
           setPriceRule(response.data);
+          form.setFieldsValue(response.data);
         } catch (err) {
           setError('Failed to load rule details');
         }
       };
       fetchRule();
     }
-  }, [id]);
+  }, [id, form]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!priceRule.name?.trim()) {
-      newErrors.name = 'Name is required';
-    }
-    
-    if (priceRule.value === undefined || priceRule.value <= 0) {
-      newErrors.value = 'Value must be greater than 0';
-    }
-    
-    if (priceRule.type === 'percentage' && priceRule.value !== undefined && priceRule.value > 100) {
-      newErrors.value = 'Percentage cannot exceed 100%';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
+  const handleSubmit = async (values: any) => {
     setLoading(true);
     setError(null);
     
     try {
       if (id) {
-        await priceRulesApi.update(id, priceRule);
+        await priceRulesApi.update(id, values);
       } else {
-        await priceRulesApi.create(priceRule as Omit<PriceRule, 'id'>);
+        await priceRulesApi.create(values as Omit<PriceRule, 'id'>);
       }
       navigate('/');
     } catch (err) {
@@ -93,141 +69,139 @@ const PricingConfig: React.FC = () => {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Card>
-        <CardContent>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          <Typography variant="h5" gutterBottom>
-            {id ? 'Edit' : 'Create'} Price Rule
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <TextField
-              fullWidth
-              label="Rule Name"
-              value={priceRule.name || ''}
-              onChange={(e) => setPriceRule({ ...priceRule, name: e.target.value })}
-              margin="normal"
-              error={!!errors.name}
-              helperText={errors.name}
-            />
-            
-            <TextField
-              fullWidth
-              label="Description"
-              multiline
-              rows={2}
-              value={priceRule.description || ''}
-              onChange={(e) => setPriceRule({ ...priceRule, description: e.target.value })}
-              margin="normal"
-            />
+    <Card>
+      {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
+      <Title level={5}>{id ? 'Edit' : 'Create'} Price Rule</Title>
+      
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        initialValues={priceRule}
+      >
+        <Form.Item
+          name="name"
+          label="Rule Name"
+          rules={[{ required: true, message: 'Name is required' }]}
+        >
+          <Input placeholder="Enter rule name" />
+        </Form.Item>
+        
+        <Form.Item
+          name="description"
+          label="Description"
+        >
+          <TextArea rows={2} placeholder="Enter description" />
+        </Form.Item>
 
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Rule Type</InputLabel>
-              <Select
-                value={priceRule.type}
-                label="Rule Type"
-                onChange={(e) => setPriceRule({ ...priceRule, type: e.target.value as PriceRule['type'] })}
-              >
-                <MenuItem value="percentage">Percentage Discount</MenuItem>
-                <MenuItem value="fixed">Fixed Amount</MenuItem>
-                <MenuItem value="bulk">Bulk Discount</MenuItem>
-              </Select>
-            </FormControl>
+        <Form.Item
+          name="type"
+          label="Rule Type"
+          rules={[{ required: true, message: 'Please select rule type' }]}
+        >
+          <Select>
+            <Option value="percentage">Percentage Discount</Option>
+            <Option value="fixed">Fixed Amount</Option>
+            <Option value="bulk">Bulk Discount</Option>
+          </Select>
+        </Form.Item>
 
-            <TextField
-              fullWidth
-              label="Value"
-              type="number"
-              value={priceRule.value || ''}
-              onChange={(e) => setPriceRule({ ...priceRule, value: Number(e.target.value) })}
-              margin="normal"
-              error={!!errors.value}
-              helperText={errors.value}
-            />
+        <Form.Item
+          name="value"
+          label="Value"
+          rules={[
+            { required: true, message: 'Value is required' },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || value <= 0) {
+                  return Promise.reject('Value must be greater than 0');
+                }
+                if (getFieldValue('type') === 'percentage' && value > 100) {
+                  return Promise.reject('Percentage cannot exceed 100%');
+                }
+                return Promise.resolve();
+              },
+            }),
+          ]}
+        >
+          <InputNumber min={0} style={{ width: '100%' }} />
+        </Form.Item>
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-              <DatePicker
-                label="Start Date"
-                value={priceRule.startDate}
-                onChange={(date) => setPriceRule({ ...priceRule, startDate: date || undefined })}
-              />
-              <DatePicker
-                label="End Date"
-                value={priceRule.endDate}
-                onChange={(date) => setPriceRule({ ...priceRule, endDate: date || undefined })}
-              />
-            </Box>
+        <Space style={{ display: 'flex', marginBottom: 16 }}>
+          <Form.Item
+            name="startDate"
+            label="Start Date"
+          >
+            <DatePicker />
+          </Form.Item>
+          
+          <Form.Item
+            name="endDate"
+            label="End Date"
+          >
+            <DatePicker />
+          </Form.Item>
+        </Space>
 
-            <Divider sx={{ my: 3 }} />
-            <Typography variant="h6" gutterBottom>Advanced Settings</Typography>
+        <Divider>Advanced Settings</Divider>
 
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={priceRule.active || false}
-                  onChange={(e) => setPriceRule({ ...priceRule, active: e.target.checked })}
-                />
-              }
-              label="Active"
-            />
+        <Space style={{ display: 'flex', marginBottom: 16 }}>
+          <Form.Item
+            name="active"
+            valuePropName="checked"
+          >
+            <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+          </Form.Item>
+          
+          <Text>Active</Text>
+        </Space>
 
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={priceRule.stackable || false}
-                  onChange={(e) => setPriceRule({ ...priceRule, stackable: e.target.checked })}
-                />
-              }
-              label="Stackable with other rules"
-            />
+        <Space style={{ display: 'flex', marginBottom: 16 }}>
+          <Form.Item
+            name="stackable"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+          
+          <Text>Stackable with other rules</Text>
+        </Space>
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-              <TextField
-                label="Priority"
-                type="number"
-                value={priceRule.priority || 1}
-                onChange={(e) => setPriceRule({ ...priceRule, priority: Number(e.target.value) })}
-                helperText="Lower number = higher priority"
-                InputProps={{ inputProps: { min: 0 } }}
-              />
+        <Space style={{ display: 'flex', marginBottom: 16 }}>
+          <Form.Item
+            name="priority"
+            label="Priority"
+            tooltip="Lower number = higher priority"
+          >
+            <InputNumber min={0} style={{ width: 120 }} />
+          </Form.Item>
+          
+          <Form.Item
+            name="level"
+            label="Rule Level"
+          >
+            <Select style={{ width: 200 }}>
+              <Option value="global">Global</Option>
+              <Option value="customer">Customer</Option>
+              <Option value="product">Product</Option>
+              <Option value="item">Item</Option>
+              <Option value="service">Service</Option>
+            </Select>
+          </Form.Item>
+        </Space>
 
-              <FormControl sx={{ minWidth: 200 }}>
-                <InputLabel>Rule Level</InputLabel>
-                <Select
-                  value={priceRule.level || 'global'}
-                  label="Rule Level"
-                  onChange={(e) => setPriceRule({ ...priceRule, level: e.target.value as PriceRule['level'] })}
-                >
-                  <MenuItem value="global">Global</MenuItem>
-                  <MenuItem value="customer">Customer</MenuItem>
-                  <MenuItem value="product">Product</MenuItem>
-                  <MenuItem value="item">Item</MenuItem>
-                  <MenuItem value="service">Service</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-              <Button
-                type="button"
-                variant="outlined"
-                onClick={() => navigate('/')}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                disabled={loading}
-              >
-                {loading ? <CircularProgress size={24} /> : (id ? 'Update' : 'Create')} Rule
-              </Button>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-    </LocalizationProvider>
+        <Form.Item>
+          <Space>
+            <Button onClick={() => navigate('/')}>
+              Cancel
+            </Button>
+            <Button type="primary" htmlType="submit" loading={loading}>
+              {id ? 'Update' : 'Create'} Rule
+            </Button>
+          </Space>
+        </Form.Item>
+      </Form>
+    </Card>
   );
 };
 
