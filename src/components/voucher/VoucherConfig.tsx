@@ -324,42 +324,37 @@ const VoucherConfig: React.FC = () => {
               </Grid>
             </Grid>
 
+            // In the Applicable Services & Add-ons section, find the FormControl components for the Select dropdowns
+            // and modify them to have a minimum height
+            
             <Divider sx={{ my: 3 }} />
             <Typography variant="h6" gutterBottom>Applicable Services & Add-ons</Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              If none selected, voucher applies to all services and add-ons
-            </Typography>
-
+            
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Applicable Services</InputLabel>
+                <FormControl fullWidth margin="normal" sx={{ minHeight: '80px' }}>
+                  <InputLabel id="applicable-services-label">Applicable Services</InputLabel>
                   <Select
+                    labelId="applicable-services-label"
                     multiple
                     value={voucher.applicableServices || []}
-                    label="Applicable Services"
                     onChange={(e) => setVoucher({ 
                       ...voucher, 
                       applicableServices: e.target.value as string[] 
                     })}
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {(selected as string[]).map((value) => {
+                        {selected.map((value) => {
                           const service = availableServices.find(s => s.id === value);
-                          return (
-                            <Chip 
-                              key={value} 
-                              label={service?.name || value} 
-                              size="small" 
-                            />
-                          );
+                          return <Chip key={value} label={service ? service.name : value} />;
                         })}
                       </Box>
                     )}
+                    sx={{ minHeight: '56px', minWidth: '220px' }}
                   >
                     {availableServices.map((service) => (
                       <MenuItem key={service.id} value={service.id}>
-                        {service.name} ({service.category})
+                        {service.name}
                       </MenuItem>
                     ))}
                   </Select>
@@ -367,34 +362,29 @@ const VoucherConfig: React.FC = () => {
               </Grid>
               
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Applicable Add-ons</InputLabel>
+                <FormControl fullWidth margin="normal" sx={{ minHeight: '80px' }}>
+                  <InputLabel id="applicable-addons-label">Applicable Add-ons</InputLabel>
                   <Select
+                    labelId="applicable-addons-label"
                     multiple
                     value={voucher.applicableAddOns || []}
-                    label="Applicable Add-ons"
                     onChange={(e) => setVoucher({ 
                       ...voucher, 
                       applicableAddOns: e.target.value as string[] 
                     })}
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {(selected as string[]).map((value) => {
+                        {selected.map((value) => {
                           const addon = availableAddOns.find(a => a.id === value);
-                          return (
-                            <Chip 
-                              key={value} 
-                              label={addon?.name || value} 
-                              size="small" 
-                            />
-                          );
+                          return <Chip key={value} label={addon ? addon.name : value} />;
                         })}
                       </Box>
                     )}
+                    sx={{ minHeight: '56px', minWidth: '220px' }}
                   >
                     {availableAddOns.map((addon) => (
                       <MenuItem key={addon.id} value={addon.id}>
-                        {addon.name} ({addon.category})
+                        {addon.name}
                       </MenuItem>
                     ))}
                   </Select>
