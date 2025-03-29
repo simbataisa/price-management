@@ -6,7 +6,7 @@ const nextConfig = {
     // Ignore TypeScript errors during build
     ignoreBuildErrors: true,
   },
-  transpilePackages: ['rc-util', 'antd', '@ant-design', 'rc-pagination', 'rc-picker', 'rc-tree'],
+  transpilePackages: ['rc-util', 'antd', '@ant-design', 'rc-pagination', 'rc-picker', 'rc-tree', 'rc-table'],
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -24,10 +24,11 @@ const nextConfig = {
       '.cjs': ['.cjs', '.cts', '.ctsx'],
     };
     
-    // Add specific alias for rc-util warning module
+    // Add specific aliases for rc-util modules
     config.resolve.alias = {
       ...config.resolve.alias,
-      'rc-util/es/warning': require.resolve('rc-util/es/warning.js')
+      'rc-util/es/warning': require.resolve('rc-util/es/warning.js'),
+      'rc-util/es/Children/toArray': require.resolve('rc-util/es/Children/toArray.js')
     };
     
     return config;
