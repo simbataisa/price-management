@@ -101,7 +101,7 @@ const mockCombos: Combo[] = [
 
 const ComboList: React.FC = () => {
   const [combos, setCombos] = useState<Combo[]>(mockCombos);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleDelete = (id: string) => {
