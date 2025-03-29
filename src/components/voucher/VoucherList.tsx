@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
   Typography,
-  Button,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
+  Tag,
+  Button,
+  Space,
+  Spin,
   Alert,
-  CircularProgress,
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+  Popconfirm,
+} from 'antd';
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
 import { useRouter } from 'next/router';
 
 interface Voucher {
@@ -86,89 +82,100 @@ const VoucherList: React.FC = () => {
     return new Date(date).toLocaleDateString();
   };
 
+  const columns = [
+    {
+      title: 'Code',
+      dataIndex: 'code',
+      key: 'code',
+      render: (text: string) => <Typography.Text strong>{text}</Typography.Text>,
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Value',
+      dataIndex: 'value',
+      key: 'value',
+      render: (_: any, record: Voucher) => (
+        record.type === 'percentage' ? `${record.value}%` : `$${record.value}`
+      ),
+    },
+    {
+      title: 'Usage',
+      key: 'usage',
+      render: (_: any, record: Voucher) => (
+        `${record.usageCount} / ${record.maxUsage || '∞'}`
+      ),
+    },
+    {
+      title: 'Valid Period',
+      key: 'period',
+      render: (_: any, record: Voucher) => (
+        `${formatDate(record.startDate)} - ${formatDate(record.endDate)}`
+      ),
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      render: (_: any, record: Voucher) => (
+        <Tag color={record.active ? 'success' : 'default'}>
+          {record.active ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_: any, record: Voucher) => (
+        <Space>
+          <Button 
+            type="text" 
+            icon={<EditOutlined />} 
+            onClick={() => router.push(`/vouchers/edit/${record.id}`)}
+          />
+          <Popconfirm
+            title="Are you sure you want to delete this voucher?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">Vouchers</Typography>
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Typography.Title level={5}>Vouchers</Typography.Title>
         <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
+          type="primary" 
+          icon={<PlusOutlined />}
           onClick={() => router.push('/vouchers/new')}
         >
           Create Voucher
         </Button>
-      </Box>
+      </div>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-          <CircularProgress />
-        </Box>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 24 }}>
+          <Spin size="large" />
+        </div>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Code</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Value</TableCell>
-                <TableCell>Usage</TableCell>
-                <TableCell>Valid Period</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {vouchers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">No vouchers found</TableCell>
-                </TableRow>
-              ) : (
-                vouchers.map((voucher) => (
-                  <TableRow key={voucher.id}>
-                    <TableCell>
-                      <Typography fontWeight="bold">{voucher.code}</Typography>
-                    </TableCell>
-                    <TableCell>{voucher.description}</TableCell>
-                    <TableCell>
-                      {voucher.type === 'percentage' ? `${voucher.value}%` : `$${voucher.value}`}
-                    </TableCell>
-                    <TableCell>
-                      {voucher.usageCount} / {voucher.maxUsage || '∞'}
-                    </TableCell>
-                    <TableCell>
-                      {formatDate(voucher.startDate)} - {formatDate(voucher.endDate)}
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={voucher.active ? 'Active' : 'Inactive'} 
-                        color={voucher.active ? 'success' : 'default'} 
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <IconButton 
-                        size="small" 
-                        onClick={() => router.push(`/vouchers/edit/${voucher.id}`)}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton 
-                        size="small" 
-                        onClick={() => handleDelete(voucher.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Table 
+          columns={columns} 
+          dataSource={vouchers} 
+          rowKey="id"
+          locale={{ emptyText: 'No vouchers found' }}
+        />
       )}
-    </Box>
+    </div>
   );
 };
 

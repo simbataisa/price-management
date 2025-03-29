@@ -18,6 +18,7 @@ import {
 } from '@ant-design/icons';
 import { useLoading } from '../../contexts/LoadingContext';
 import { useRouter } from 'next/router';
+import { ColumnsType } from 'antd/es/table';
 
 interface ComboItem {
   productId: string;
@@ -195,8 +196,8 @@ const ComboList: React.FC = () => {
     return text.slice(0, maxLength) + '...';
   };
 
-  // Define columns for Ant Design Table
-  const columns = [
+  // Define columns for Ant Design Table with proper typing
+  const columns: ColumnsType<Combo> = [
     {
       title: 'Name',
       dataIndex: 'name',
