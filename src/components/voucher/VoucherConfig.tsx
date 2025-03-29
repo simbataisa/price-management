@@ -163,14 +163,14 @@ const VoucherConfig: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Card>
-        <CardContent>
+      <Card sx={{ maxWidth: '100%', overflow: 'hidden' }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <Typography variant="h5" gutterBottom>
             {id ? 'Edit' : 'Create'} Voucher
           </Typography>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1, sm: 2 }}>
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -265,10 +265,10 @@ const VoucherConfig: React.FC = () => {
               </Grid>
             </Grid>
 
-            <Divider sx={{ my: 3 }} />
+            <Divider sx={{ my: { xs: 2, sm: 3 } }} />
             <Typography variant="h6" gutterBottom>Restrictions</Typography>
 
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1, sm: 2 }}>
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Customer Restriction</InputLabel>
@@ -324,15 +324,15 @@ const VoucherConfig: React.FC = () => {
               </Grid>
             </Grid>
 
-            // In the Applicable Services & Add-ons section, find the FormControl components for the Select dropdowns
-            // and modify them to have a minimum height
-            
-            <Divider sx={{ my: 3 }} />
+            <Divider sx={{ my: { xs: 2, sm: 3 } }} />
             <Typography variant="h6" gutterBottom>Applicable Services & Add-ons</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              If none selected, voucher applies to all services and add-ons
+            </Typography>
             
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1, sm: 2 }}>
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal" sx={{ minHeight: '80px' }}>
+                <FormControl fullWidth margin="normal">
                   <InputLabel id="applicable-services-label">Applicable Services</InputLabel>
                   <Select
                     labelId="applicable-services-label"
@@ -344,13 +344,20 @@ const VoucherConfig: React.FC = () => {
                     })}
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => {
+                        {selected.length > 0 ? selected.map((value) => {
                           const service = availableServices.find(s => s.id === value);
-                          return <Chip key={value} label={service ? service.name : value} />;
-                        })}
+                          return <Chip key={value} label={service ? service.name : value} size="small" />;
+                        }) : <em>All services</em>}
                       </Box>
                     )}
-                    sx={{ minHeight: '56px', minWidth: '220px' }}
+                    sx={{ 
+                      minHeight: '56px', 
+                      minWidth: { xs: '100%', sm: '220px' },
+                      '& .MuiSelect-select': {
+                        overflow: 'auto',
+                        maxHeight: '100px'
+                      }
+                    }}
                   >
                     {availableServices.map((service) => (
                       <MenuItem key={service.id} value={service.id}>
@@ -362,7 +369,7 @@ const VoucherConfig: React.FC = () => {
               </Grid>
               
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal" sx={{ minHeight: '80px' }}>
+                <FormControl fullWidth margin="normal">
                   <InputLabel id="applicable-addons-label">Applicable Add-ons</InputLabel>
                   <Select
                     labelId="applicable-addons-label"
@@ -374,13 +381,20 @@ const VoucherConfig: React.FC = () => {
                     })}
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => {
+                        {selected.length > 0 ? selected.map((value) => {
                           const addon = availableAddOns.find(a => a.id === value);
-                          return <Chip key={value} label={addon ? addon.name : value} />;
-                        })}
+                          return <Chip key={value} label={addon ? addon.name : value} size="small" />;
+                        }) : <em>All add-ons</em>}
                       </Box>
                     )}
-                    sx={{ minHeight: '56px', minWidth: '220px' }}
+                    sx={{ 
+                      minHeight: '56px', 
+                      minWidth: { xs: '100%', sm: '220px' },
+                      '& .MuiSelect-select': {
+                        overflow: 'auto',
+                        maxHeight: '100px'
+                      }
+                    }}
                   >
                     {availableAddOns.map((addon) => (
                       <MenuItem key={addon.id} value={addon.id}>
@@ -392,7 +406,15 @@ const VoucherConfig: React.FC = () => {
               </Grid>
             </Grid>
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 2, 
+              mt: 3,
+              '& .MuiButton-root': {
+                width: { xs: '100%', sm: 'auto' }
+              }
+            }}>
               <Button
                 type="button"
                 variant="outlined"

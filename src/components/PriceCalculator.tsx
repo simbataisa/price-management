@@ -1,5 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Paper, Button, Box } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { 
+  Paper, 
+  Button, 
+  Box, 
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  InputAdornment,
+  Grid,
+  CircularProgress,
+  Divider,
+  Alert
+} from '@mui/material';
 import { Product, PriceRule, PriceCalculationResult } from '../types/pricing';
 import { calculatePrice, priceRulesApi } from '../services/api';
 import { evaluateConditionGroup } from '../utils/conditionEvaluator';
@@ -15,9 +32,11 @@ import CalculationResult from './pricing/CalculationResult';
 import { serviceOptions as defaultServiceOptions } from '../data/serviceOptions';
 import { availableAddOns, carModels } from '../data/rentalData';
 
-const PriceCalculator = () => {
+const PriceCalculator: React.FC = () => {
   // Add state for available rules from API
   const [availableRules, setAvailableRules] = useState<PriceRule[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Car rental specific states
   const [rentalType, setRentalType] = useState<'short-term' | 'long-term'>('short-term');
@@ -35,6 +54,7 @@ const PriceCalculator = () => {
         setAvailableRules(response.data);
       } catch (error) {
         console.error('Failed to fetch pricing rules:', error);
+        setError('Failed to fetch pricing rules. Please try again.');
       }
     };
     
@@ -108,174 +128,204 @@ const PriceCalculator = () => {
   };
 
   const calculateFinalPrice = () => {
-    // Calculate car age
-    const currentYear = new Date().getFullYear();
-    const carAge = currentYear - carDetails.year;
+    setLoading(true);
+    setError(null);
     
-    // Create context for condition evaluation
-    const context = {
-      customerType,
-      date: new Date(),
-      carAge,
-      mileage: carDetails.mileage,
-      route,
-      duration,
-      rentalType,
-      pickupLocation,
-      returnLocation,
-      weddingDecoration,
-      withDriver,
-      carQuantity,
-      carModel: carDetails.model.toLowerCase(),
-      addOns,
-      selectedServices,
-      isWeekend: new Date().getDay() === 0 || new Date().getDay() === 6,
-      isSummer: new Date().getMonth() >= 5 && new Date().getMonth() <= 7, // June, July, August
-      differentReturn: pickupLocation !== returnLocation
-    };
-    
-    // Filter rules based on sophisticated condition logic
-    const applicableRules = availableRules.filter(rule => {
-      // Check legacy conditions for backward compatibility
-      if (rule.conditions) {
-        // Legacy condition checks
-        return true;
-      }
+    try {
+      // Calculate car age
+      const currentYear = new Date().getFullYear();
+      const carAge = currentYear - carDetails.year;
       
-      // Check new condition logic
-      if (rule.conditionLogic) {
-        return evaluateConditionGroup(rule.conditionLogic, context);
-      }
-      
-      return true;
-    });
-    
-    // Get selected rules that are also applicable
-    const selectedRulesData = applicableRules.filter(rule => 
-      selectedRules.includes(rule.id)
-    );
-    
-    // Apply selected services as rules
-    const serviceRules: PriceRule[] = selectedServices.map(serviceId => {
-      const service = serviceOptions.find(s => s.id === serviceId);
-      if (!service) return null;
-      
-      return {
-        id: `service-${serviceId}`,
-        name: service.name,
-        description: service.description,
-        type: service.type === 'percentage' ? 'percentage' : 'fixed',
-        value: -serviceValues[serviceId], // Negative value means increase
-        active: true,
-        priority: 1,
-        level: 'service',
-        stackable: true,
-        conditions: {
-          serviceType: serviceId
-        }
+      // Create context for condition evaluation
+      const context = {
+        customerType,
+        date: new Date(),
+        carAge,
+        mileage: carDetails.mileage,
+        route,
+        duration,
+        rentalType,
+        pickupLocation,
+        returnLocation,
+        weddingDecoration,
+        withDriver,
+        carQuantity,
+        carModel: carDetails.model.toLowerCase(),
+        addOns,
+        selectedServices,
+        isWeekend: new Date().getDay() === 0 || new Date().getDay() === 6,
+        isSummer: new Date().getMonth() >= 5 && new Date().getMonth() <= 7, // June, July, August
+        differentReturn: pickupLocation !== returnLocation
       };
-    }).filter(Boolean) as PriceRule[];
+      
+      // Filter rules based on sophisticated condition logic
+      const applicableRules = availableRules.filter(rule => {
+        // Check legacy conditions for backward compatibility
+        if (rule.conditions) {
+          // Legacy condition checks
+          return true;
+        }
+        
+        // Check new condition logic
+        if (rule.conditionLogic) {
+          return evaluateConditionGroup(rule.conditionLogic, context);
+        }
+        
+        return true;
+      });
+      
+      // Get selected rules that are also applicable
+      const selectedRulesData = applicableRules.filter(rule => 
+        selectedRules.includes(rule.id)
+      );
+      
+      // Apply selected services as rules
+      const serviceRules: PriceRule[] = selectedServices.map(serviceId => {
+        const service = serviceOptions.find(s => s.id === serviceId);
+        if (!service) return null;
+        
+        return {
+          id: `service-${serviceId}`,
+          name: service.name,
+          description: service.description,
+          type: service.type === 'percentage' ? 'percentage' : 'fixed',
+          value: -serviceValues[serviceId], // Negative value means increase
+          active: true,
+          priority: 1,
+          level: 'service',
+          stackable: true,
+          conditions: {
+            serviceType: serviceId
+          }
+        };
+      }).filter(Boolean) as PriceRule[];
 
-    // Combine with other selected rules
-    const allSelectedRules = [...selectedRulesData, ...serviceRules];
-    
-    // Find the base price for the selected car model
-    const selectedModel = carModels.find(model => 
-      model.id === carDetails.model.toLowerCase()
-    );
-    const basePrice = selectedModel ? selectedModel.basePrice : 50;
-    
-    // Calculate add-on costs
-    const addOnTotal = addOns.reduce((total, addOnId) => {
-      const addOn = availableAddOns.find(a => a.id === addOnId);
-      return total + (addOn ? addOn.price : 0);
-    }, 0);
-    
-    // Create product with updated base price and rules
-    const productWithRules: Product = {
-      ...product as Product,
-      basePrice: basePrice + addOnTotal,
-      priceRules: allSelectedRules
-    };
-    
-    const result = calculatePrice(productWithRules, duration, context);
-    
-    // Multiply by car quantity for the final price
-    const finalPrice = result.finalPrice * carQuantity;
-    const originalPrice = productWithRules.basePrice * duration * carQuantity;
-    
-    // Convert to PriceCalculationResult format
-    const calculationResult: PriceCalculationResult = {
-      originalPrice: originalPrice,
-      finalPrice: finalPrice,
-      appliedRules: result.appliedRules,
-      breakdown: result.breakdown,
-      savings: originalPrice - finalPrice,
-      savingsPercentage: (originalPrice - finalPrice) / originalPrice * 100
-    };
-    
-    setCalculation(calculationResult);
+      // Combine with other selected rules
+      const allSelectedRules = [...selectedRulesData, ...serviceRules];
+      
+      // Find the base price for the selected car model
+      const selectedModel = carModels.find(model => 
+        model.id === carDetails.model.toLowerCase()
+      );
+      const basePrice = selectedModel ? selectedModel.basePrice : 50;
+      
+      // Calculate add-on costs
+      const addOnTotal = addOns.reduce((total, addOnId) => {
+        const addOn = availableAddOns.find(a => a.id === addOnId);
+        return total + (addOn ? addOn.price : 0);
+      }, 0);
+      
+      // Create product with updated base price and rules
+      const productWithRules: Product = {
+        ...product as Product,
+        basePrice: basePrice + addOnTotal,
+        priceRules: allSelectedRules
+      };
+      
+      const result = calculatePrice(productWithRules, duration, context);
+      
+      // Multiply by car quantity for the final price
+      const finalPrice = result.finalPrice * carQuantity;
+      const originalPrice = productWithRules.basePrice * duration * carQuantity;
+      
+      // Convert to PriceCalculationResult format
+      const calculationResult: PriceCalculationResult = {
+        originalPrice: originalPrice,
+        finalPrice: finalPrice,
+        appliedRules: result.appliedRules,
+        breakdown: result.breakdown,
+        savings: originalPrice - finalPrice,
+        savingsPercentage: (originalPrice - finalPrice) / originalPrice * 100
+      };
+      
+      setCalculation(calculationResult);
+    } catch (err) {
+      setError('Failed to calculate price. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <Paper sx={{ p: 3 }}>
-        <RentalOptions
-          rentalType={rentalType}
-          setRentalType={setRentalType}
-          carDetails={carDetails}
-          setCarDetails={setCarDetails}
-          duration={duration}
-          setDuration={setDuration}
-          route={route}
-          setRoute={setRoute}
-          customerType={customerType}
-          setCustomerType={setCustomerType}
-          carQuantity={carQuantity}
-          setCarQuantity={setCarQuantity}
-          carModels={carModels}
-        />
+    <Card sx={{ maxWidth: '100%', overflow: 'hidden' }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h5" gutterBottom>
+          Price Calculator
+        </Typography>
         
-        <AddOns
-          addOns={addOns}
-          handleAddOnToggle={handleAddOnToggle}
-          availableAddOns={availableAddOns}
-          rentalType={rentalType}
-          pickupLocation={pickupLocation}
-          setPickupLocation={setPickupLocation}
-          returnLocation={returnLocation}
-          setReturnLocation={setReturnLocation}
-          withDriver={withDriver}
-          setWithDriver={setWithDriver}
-          weddingDecoration={weddingDecoration}
-          setWeddingDecoration={setWeddingDecoration}
-        />
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         
-        <ConfigurableServices
-          serviceOptions={serviceOptions}
-          selectedServices={selectedServices}
-          serviceValues={serviceValues}
-          handleServiceToggle={handleServiceToggle}
-          handleServiceValueChange={handleServiceValueChange}
-        />
-        
-        <Button
-          variant="contained"
-          onClick={calculateFinalPrice}
-          sx={{ mt: 2 }}
-        >
-          Calculate Price
-        </Button>
-      </Paper>
-      
-      <PricingRules
-        availableRules={availableRules} // Pass the rules from API instead of static data
-        selectedRules={selectedRules}
-        handleRuleToggle={handleRuleToggle}
-      />
-      
-      {calculation && <CalculationResult calculation={calculation} />}
-    </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+            <RentalOptions
+              rentalType={rentalType}
+              setRentalType={setRentalType}
+              carDetails={carDetails}
+              setCarDetails={setCarDetails}
+              duration={duration}
+              setDuration={setDuration}
+              route={route}
+              setRoute={setRoute}
+              customerType={customerType}
+              setCustomerType={setCustomerType}
+              carQuantity={carQuantity}
+              setCarQuantity={setCarQuantity}
+              carModels={carModels}
+            />
+            
+            <AddOns
+              addOns={addOns}
+              handleAddOnToggle={handleAddOnToggle}
+              availableAddOns={availableAddOns}
+              rentalType={rentalType}
+              pickupLocation={pickupLocation}
+              setPickupLocation={setPickupLocation}
+              returnLocation={returnLocation}
+              setReturnLocation={setReturnLocation}
+              withDriver={withDriver}
+              setWithDriver={setWithDriver}
+              weddingDecoration={weddingDecoration}
+              setWeddingDecoration={setWeddingDecoration}
+            />
+            
+            <ConfigurableServices
+              serviceOptions={serviceOptions}
+              selectedServices={selectedServices}
+              serviceValues={serviceValues}
+              handleServiceToggle={handleServiceToggle}
+              handleServiceValueChange={handleServiceValueChange}
+            />
+            
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 2, 
+              mt: 3,
+              '& .MuiButton-root': {
+                width: { xs: '100%', sm: 'auto' }
+              }
+            }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={calculateFinalPrice}
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Calculate Price'}
+              </Button>
+            </Box>
+          </Paper>
+          
+          <PricingRules
+            availableRules={availableRules}
+            selectedRules={selectedRules}
+            handleRuleToggle={handleRuleToggle}
+          />
+          
+          {calculation && <CalculationResult calculation={calculation} />}
+        </Box>
+      </CardContent>
+    </Card>
   );
 };
 

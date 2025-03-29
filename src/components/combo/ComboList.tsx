@@ -14,9 +14,12 @@ import {
   IconButton,
   Alert,
   Tooltip,
+  Card,
+  CardContent,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Info as InfoIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useLoading } from '../../contexts/LoadingContext';
 
 interface ComboItem {
   productId: string;
@@ -103,10 +106,33 @@ const ComboList: React.FC = () => {
   const [combos, setCombos] = useState<Combo[]>(mockCombos);
   const [error, _setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { showLoading, hideLoading } = useLoading();
+  
+  // Add effect to hide loading after navigation
+  useEffect(() => {
+    return () => {
+      // Hide loading when component unmounts (during navigation)
+      hideLoading();
+    };
+  }, [hideLoading]);
+
+  // Update navigation functions to show loading
+  const handleNavigate = (path: string) => {
+    showLoading();
+    // Add a small timeout to make the navigation feel smoother
+    setTimeout(() => {
+      navigate(path);
+    }, 300);
+  };
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this combo?')) {
-      setCombos(combos.filter(combo => combo.id !== id));
+      showLoading();
+      // Simulate API call with a small delay
+      setTimeout(() => {
+        setCombos(combos.filter(combo => combo.id !== id));
+        hideLoading();
+      }, 300);
     }
   };
 
@@ -137,96 +163,69 @@ const ComboList: React.FC = () => {
     }
   };
 
+  // Add the missing truncateText function
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + '...';
+  };
+
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">Combo Packages</Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/combos/new')}
-        >
-          Create Combo
-        </Button>
-      </Box>
-
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Items</TableCell>
-              <TableCell>Pricing</TableCell>
-              <TableCell>Valid Period</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {combos.map((combo) => (
-              <TableRow key={combo.id}>
-                <TableCell>
-                  <Typography fontWeight="bold">{combo.name}</Typography>
-                </TableCell>
-                <TableCell>{combo.description}</TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    {combo.items.map((item, index) => (
-                      <Typography key={index} variant="body2">
-                        {item.quantity}x {getProductName(item.productId)}
-                      </Typography>
-                    ))}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Tooltip title={
-                    <Box>
-                      <Typography variant="body2">Regular: ${calculateTotalPrice(combo).toFixed(2)}</Typography>
-                      <Typography variant="body2">Discount: {combo.discountType === 'percentage' ? `${combo.discountValue}%` : `$${combo.discountValue}`}</Typography>
-                      <Typography variant="body2">Final: ${calculateDiscountedPrice(combo).toFixed(2)}</Typography>
-                    </Box>
-                  }>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2" sx={{ mr: 1 }}>
-                        ${calculateDiscountedPrice(combo).toFixed(2)}
-                      </Typography>
-                      <InfoIcon fontSize="small" color="action" />
-                    </Box>
-                  </Tooltip>
-                </TableCell>
-                <TableCell>
-                  {formatDate(combo.startDate)} - {formatDate(combo.endDate)}
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={combo.active ? 'Active' : 'Inactive'} 
-                    color={combo.active ? 'success' : 'default'} 
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => navigate(`/combos/edit/${combo.id}`)}
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => handleDelete(combo.id)}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </TableCell>
+    <Card sx={{ maxWidth: '100%', overflow: 'hidden' }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+          <Typography variant="h5">Combo Packages</Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => handleNavigate('/combos/new')}
+            sx={{ whiteSpace: 'nowrap' }}
+          >
+            New Combo
+          </Button>
+        </Box>
+        
+        <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+          <Table sx={{ minWidth: { xs: 500, sm: 650 } }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Description</TableCell>
+                <TableCell>Price</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+            </TableHead>
+            <TableBody>
+              {combos.map((combo) => (
+                <TableRow key={combo.id}>
+                  <TableCell>{combo.name}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{truncateText(combo.description, 50)}</TableCell>
+                  <TableCell>${calculateDiscountedPrice(combo).toFixed(2)}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Chip 
+                      label={combo.active ? 'Active' : 'Inactive'} 
+                      color={combo.active ? 'success' : 'default'} 
+                      size="small" 
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                      <IconButton size="small" onClick={() => handleNavigate(`/combos/${combo.id}`)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDelete(combo.id)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </CardContent>
+    </Card>
   );
 };
 

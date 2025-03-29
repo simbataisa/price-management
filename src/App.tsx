@@ -8,6 +8,7 @@ import VoucherConfig from './components/voucher/VoucherConfig';
 import VoucherList from './components/voucher/VoucherList';
 import ComboConfig from './components/combo/ComboConfig';
 import ComboList from './components/combo/ComboList';
+import { LoadingProvider, useLoading } from './contexts/LoadingContext';
 
 // Navigation component that will be present on all pages
 const Navigation = () => {
@@ -18,9 +19,15 @@ const Navigation = () => {
     if (location.pathname.includes('/rules')) return 1;
     return 0;
   });
-
+  const { showLoading, hideLoading } = useLoading();
+  
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
+    showLoading();
+    // Add a small delay to make the loading effect visible
+    setTimeout(() => {
+      setValue(newValue);
+      hideLoading();
+    }, 300);
   };
 
   return (
@@ -65,4 +72,13 @@ function App() {
   );
 }
 
-export default App;
+// Wrap the App component with the LoadingProvider
+const AppWithLoading = () => {
+  return (
+    <LoadingProvider>
+      <App />
+    </LoadingProvider>
+  );
+};
+
+export default AppWithLoading;
