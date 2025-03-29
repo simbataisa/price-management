@@ -14,8 +14,13 @@ import {
   IconButton,
   Alert,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+// Remove this import as it's not needed
 import { useNavigate } from 'react-router-dom';
+// Keep the Next.js router import
+import { useRouter } from 'next/router';
 
 interface Voucher {
   id: string;
@@ -78,7 +83,7 @@ const mockVouchers: Voucher[] = [
 const VoucherList: React.FC = () => {
   const [vouchers, setVouchers] = useState<Voucher[]>(mockVouchers);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this voucher?')) {
@@ -98,7 +103,7 @@ const VoucherList: React.FC = () => {
         <Button 
           variant="contained" 
           startIcon={<AddIcon />}
-          onClick={() => navigate('/vouchers/new')}
+          onClick={() => router.push('/vouchers/new')}
         >
           Create Voucher
         </Button>
@@ -145,7 +150,7 @@ const VoucherList: React.FC = () => {
                 <TableCell>
                   <IconButton 
                     size="small" 
-                    onClick={() => navigate(`/vouchers/edit/${voucher.id}`)}
+                    onClick={() => router.push(`/vouchers/edit/${voucher.id}`)}
                   >
                     <EditIcon fontSize="small" />
                   </IconButton>

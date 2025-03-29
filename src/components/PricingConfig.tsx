@@ -15,7 +15,7 @@ import {
 } from 'antd';
 import { PriceRule } from '../types/pricing';
 import { priceRulesApi } from '../services/api';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useRouter } from 'next/router';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -31,15 +31,16 @@ const PricingConfig: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { id } = useParams();
+  // Replace useNavigate and useParams with useRouter
+  const router = useRouter();
+  const { id } = router.query;
   const [form] = Form.useForm();
 
   useEffect(() => {
     if (id) {
       const fetchRule = async () => {
         try {
-          const response = await priceRulesApi.getById(id);
+          const response = await priceRulesApi.getById(id as string);
           setPriceRule(response.data);
           form.setFieldsValue(response.data);
         } catch (err) {
@@ -56,13 +57,13 @@ const PricingConfig: React.FC = () => {
     
     try {
       if (id) {
-        await priceRulesApi.update(id, values);
+        await priceRulesApi.update(id as string, values);
       } else {
-        await priceRulesApi.create(values as Omit<PriceRule, 'id'>);
+        await priceRulesApi.create(values);
       }
-      navigate('/');
+      router.push('/rules');
     } catch (err) {
-      setError('Failed to save price rule. Please try again.');
+      setError('Failed to save rule. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -192,7 +193,7 @@ const PricingConfig: React.FC = () => {
 
         <Form.Item>
           <Space>
-            <Button onClick={() => navigate('/')}>
+            <Button onClick={() => router.push('/')}>
               Cancel
             </Button>
             <Button type="primary" htmlType="submit" loading={loading}>

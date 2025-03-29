@@ -15,7 +15,7 @@ import {
   DeleteOutlined, 
   PlusOutlined 
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { PriceRule } from '../types/pricing';
 import { priceRulesApi } from '../services/api';
 
@@ -25,7 +25,8 @@ const PriceRulesList: React.FC = () => {
   const [rules, setRules] = useState<PriceRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  // Replace useNavigate with useRouter
+  const router = useRouter();
 
   useEffect(() => {
     const fetchRules = async () => {
@@ -109,7 +110,7 @@ const PriceRulesList: React.FC = () => {
           <Button 
             type="text" 
             icon={<EditOutlined />} 
-            onClick={() => navigate(`/rules/edit/${record.id}`)}
+            onClick={() => router.push(`/rules/edit/${record.id}`)}
           />
           <Popconfirm
             title="Are you sure you want to delete this rule?"
@@ -135,7 +136,7 @@ const PriceRulesList: React.FC = () => {
         <Button 
           type="primary" 
           icon={<PlusOutlined />}
-          onClick={() => navigate('/rules/new')}
+          onClick={() => router.push('/rules/new')}
         >
           Add New Rule
         </Button>

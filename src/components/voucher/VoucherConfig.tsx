@@ -25,7 +25,7 @@ const Grid = MuiGrid as any;
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useRouter } from 'next/router';
 
 interface Voucher {
   id: string;
@@ -103,14 +103,15 @@ const VoucherConfig: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const navigate = useNavigate();
-  const { id } = useParams();
+  // Replace useNavigate and useParams with useRouter
+  const router = useRouter();
+  const { id } = router.query;
 
   useEffect(() => {
     if (id) {
       const fetchVoucher = async () => {
         try {
-          const response = await voucherApi.getById(id);
+          const response = await voucherApi.getById(id as string);
           setVoucher(response.data);
         } catch (err) {
           setError('Failed to load voucher details');
@@ -149,11 +150,11 @@ const VoucherConfig: React.FC = () => {
     
     try {
       if (id) {
-        await voucherApi.update(id, voucher);
+        await voucherApi.update(id as string, voucher);
       } else {
         await voucherApi.create(voucher as Omit<Voucher, 'id'>);
       }
-      navigate('/vouchers');
+      router.push('/vouchers');
     } catch (err) {
       setError('Failed to save voucher. Please try again.');
     } finally {
@@ -418,7 +419,7 @@ const VoucherConfig: React.FC = () => {
               <Button
                 type="button"
                 variant="outlined"
-                onClick={() => navigate('/vouchers')}
+                onClick={() => router.push('/vouchers')}
               >
                 Cancel
               </Button>

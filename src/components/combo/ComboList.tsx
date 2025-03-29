@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
+  Card,
   Typography,
   Button,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
+  Tag,
+  Space,
+  Popconfirm,
   Alert,
-  Tooltip,
-  Card,
-  CardContent,
-} from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Info as InfoIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+  Spin
+} from 'antd';
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  InfoCircleOutlined
+} from '@ant-design/icons';
 import { useLoading } from '../../contexts/LoadingContext';
+import { useRouter } from 'next/router';
 
 interface ComboItem {
   productId: string;
@@ -102,16 +100,17 @@ const mockCombos: Combo[] = [
   },
 ];
 
+const { Title } = Typography;
+
 const ComboList: React.FC = () => {
   const [combos, setCombos] = useState<Combo[]>(mockCombos);
   const [error, _setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
   const { showLoading, hideLoading } = useLoading();
   
-  // Add effect to hide loading after navigation
+  // Keep the useEffect for hiding loading
   useEffect(() => {
     return () => {
-      // Hide loading when component unmounts (during navigation)
       hideLoading();
     };
   }, [hideLoading]);
@@ -119,23 +118,20 @@ const ComboList: React.FC = () => {
   // Update navigation functions to show loading
   const handleNavigate = (path: string) => {
     showLoading();
-    // Add a small timeout to make the navigation feel smoother
     setTimeout(() => {
-      navigate(path);
+      router.push(path);
     }, 300);
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this combo?')) {
-      showLoading();
-      // Simulate API call with a small delay
-      setTimeout(() => {
-        setCombos(combos.filter(combo => combo.id !== id));
-        hideLoading();
-      }, 300);
-    }
+    showLoading();
+    setTimeout(() => {
+      setCombos(combos.filter(combo => combo.id !== id));
+      hideLoading();
+    }, 300);
   };
 
+  // Keep utility functions
   const formatDate = (date?: Date) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString();
@@ -163,68 +159,91 @@ const ComboList: React.FC = () => {
     }
   };
 
-  // Add the missing truncateText function
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + '...';
   };
 
-  return (
-    <Card sx={{ maxWidth: '100%', overflow: 'hidden' }}>
-      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          <Typography variant="h5">Combo Packages</Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => handleNavigate('/combos/new')}
-            sx={{ whiteSpace: 'nowrap' }}
+  // Define columns for Ant Design Table
+  const columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      responsive: ['sm'],
+      render: (text: string) => truncateText(text, 50),
+    },
+    {
+      title: 'Price',
+      key: 'price',
+      render: (_: any, record: Combo) => (
+        <span>${calculateDiscountedPrice(record).toFixed(2)}</span>
+      ),
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      responsive: ['md'],
+      render: (_: any, record: Combo) => (
+        <Tag color={record.active ? 'success' : 'default'}>
+          {record.active ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'right' as const,
+      render: (_: any, record: Combo) => (
+        <Space size="middle">
+          <Button 
+            type="text" 
+            icon={<EditOutlined />} 
+            onClick={() => handleNavigate(`/combos/edit/${record.id}`)}
+          />
+          <Popconfirm
+            title="Are you sure you want to delete this combo?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
           >
-            New Combo
-          </Button>
-        </Box>
-        
-        <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-          <Table sx={{ minWidth: { xs: 500, sm: 650 } }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Description</TableCell>
-                <TableCell>Price</TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {combos.map((combo) => (
-                <TableRow key={combo.id}>
-                  <TableCell>{combo.name}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{truncateText(combo.description, 50)}</TableCell>
-                  <TableCell>${calculateDiscountedPrice(combo).toFixed(2)}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                    <Chip 
-                      label={combo.active ? 'Active' : 'Inactive'} 
-                      color={combo.active ? 'success' : 'default'} 
-                      size="small" 
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                      <IconButton size="small" onClick={() => handleNavigate(`/combos/${combo.id}`)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleDelete(combo.id)}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </CardContent>
+            <Button 
+              type="text" 
+              danger 
+              icon={<DeleteOutlined />} 
+            />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Title level={4}>Combo Packages</Title>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />}
+          onClick={() => handleNavigate('/combos/new')}
+        >
+          New Combo
+        </Button>
+      </div>
+
+      {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
+
+      <Table 
+        columns={columns} 
+        dataSource={combos} 
+        rowKey="id"
+        pagination={{ pageSize: 10 }}
+      />
     </Card>
   );
 };
