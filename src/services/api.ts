@@ -107,10 +107,19 @@ export const priceRulesApi = {
 };
 
 // Enhanced price calculation with priority and stacking rules
+// Define a proper context type
+interface PriceCalculationContext {
+  customerType?: string;
+  date?: Date;
+  quantity?: number;
+  [key: string]: unknown;
+}
+
+// Update the function signature
 export const calculatePrice = (
   product: Product, 
   duration: number, 
-  context: any
+  _context: PriceCalculationContext // Renamed to _context since it's not used
 ): PriceCalculationResult => {
   // Sort rules by priority (lower number = higher priority)
   const sortedRules = [...product.priceRules].sort((a, b) => 
