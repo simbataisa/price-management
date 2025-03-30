@@ -75,7 +75,7 @@ function AppContent({ Component, pageProps }: AppProps) {
       <Layout style={{ minHeight: '100vh' }}>
         <Header style={{ background: '#fff', padding: '0 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Title level={4} style={{ margin: '0 24px 0 0' }}>Pricing Management</Title>
+            {/* <Title level={4} style={{ margin: '0 24px 0 0' }}>Pricing Management</Title> */}
             <Menu
               onClick={handleMenuClick}
               selectedKeys={[current]}
@@ -154,14 +154,13 @@ function MyApp(props: AppProps) {
     <LoadingProvider>
       <Layout style={{ minHeight: '100vh' }}>
         <Header style={{ background: '#fff', padding: '0 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Title level={4} style={{ margin: '0 24px 0 0' }}>Pricing Management</Title>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Menu
               onClick={handleMenuClick}
               selectedKeys={[current]}
               mode="horizontal"
               items={menuItems}
-              style={{ flex: 1 }}
+              style={{ flex: 0.6 }}
             />
           </div>
         </Header>
