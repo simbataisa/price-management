@@ -17,6 +17,7 @@ import {
   Tag,
   Space,
 } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 
@@ -152,244 +153,259 @@ const VoucherConfig: React.FC = () => {
   };
 
   return (
-    <Card>
-      {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
-      <Title level={5}>{id ? 'Edit' : 'Create'} Voucher</Title>
-      
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        initialValues={voucher}
-      >
-        <Row gutter={16}>
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="code"
-              label="Voucher Code"
-              rules={[{ required: true, message: 'Voucher code is required' }]}
-            >
-              <Input 
-                onChange={(e) => form.setFieldValue('code', e.target.value.toUpperCase())}
-              />
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="type"
-              label="Voucher Type"
-              rules={[{ required: true }]}
-            >
-              <Select>
-                <Option value="percentage">Percentage Discount</Option>
-                <Option value="fixed">Fixed Amount</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="value"
-              label="Value"
-              rules={[
-                { required: true, message: 'Value is required' },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || value <= 0) {
-                      return Promise.reject('Value must be greater than 0');
-                    }
-                    if (getFieldValue('type') === 'percentage' && value > 100) {
-                      return Promise.reject('Percentage cannot exceed 100%');
-                    }
-                    return Promise.resolve();
-                  },
-                }),
-              ]}
-              extra={form.getFieldValue('type') === 'percentage' ? 'Percentage value (0-100)' : 'Amount in currency'}
-            >
-              <InputNumber style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="minPurchaseAmount"
-              label="Minimum Purchase Amount"
-            >
-              <InputNumber style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="maxUsage"
-              label="Maximum Usage"
-              extra="Leave empty for unlimited usage"
-            >
-              <InputNumber style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="usageCount"
-              label="Current Usage Count"
-              extra="Number of times this voucher has been used"
-            >
-              <InputNumber 
-                style={{ width: '100%' }} 
-                disabled={!id}
-              />
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="startDate"
-              label="Start Date"
-            >
-              <DatePicker style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="endDate"
-              label="End Date"
-            >
-              <DatePicker style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Divider />
-        <Title level={5}>Restrictions</Title>
-
-        <Row gutter={16}>
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="customerRestriction"
-              label="Customer Restriction"
-            >
-              <Select>
-                <Option value="all">All Customers</Option>
-                <Option value="new">New Customers Only</Option>
-                <Option value="existing">Existing Customers Only</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="stackable"
-              label="Stackable with other vouchers/discounts"
-              valuePropName="checked"
-            >
-              <Switch />
-            </Form.Item>
-          </Col>
-          
-          {form.getFieldValue('stackable') && (
+    <div className="config-container" style={{ 
+      maxWidth: '1200px', 
+      margin: '0 auto'
+    }}>
+      <Card>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Button 
+            icon={<ArrowLeftOutlined />} 
+            onClick={() => router.push('/vouchers')}
+          >
+            Back to Vouchers
+          </Button>
+          <Title level={4} style={{ margin: 0 }}>{id ? 'Edit' : 'Create'} Voucher</Title>
+          <div style={{ width: 80 }}></div> {/* Spacer for alignment */}
+        </div>
+        
+        {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
+        
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={voucher}
+        >
+          <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item
-                name="stackPriority"
-                label="Stack Priority"
-                extra="Lower number = higher priority (applied first)"
+                name="code"
+                label="Voucher Code"
+                rules={[{ required: true, message: 'Voucher code is required' }]}
               >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={1}
+                <Input 
+                  onChange={(e) => form.setFieldValue('code', e.target.value.toUpperCase())}
                 />
               </Form.Item>
             </Col>
-          )}
-          
-          <Col xs={24}>
-            <Form.Item
-              name="active"
-              label="Active"
-              valuePropName="checked"
-            >
-              <Switch />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Divider />
-        <Title level={5}>Applicable Services & Add-ons</Title>
-        <Text type="secondary" style={{ marginBottom: 16, display: 'block' }}>
-          If none selected, voucher applies to all services and add-ons
-        </Text>
-        
-        <Row gutter={16}>
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="applicableServices"
-              label="Applicable Services"
-            >
-              <Select
-                mode="multiple"
-                placeholder="Select services"
-                style={{ width: '100%' }}
-                tagRender={(props) => {
-                  const service = availableServices.find(s => s.id === props.value);
-                  return (
-                    <Tag closable={props.closable} onClose={props.onClose}>
-                      {service ? service.name : props.value}
-                    </Tag>
-                  );
-                }}
+            
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="type"
+                label="Voucher Type"
+                rules={[{ required: true }]}
               >
-                {availableServices.map((service) => (
-                  <Option key={service.id} value={service.id}>
-                    {service.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="applicableAddOns"
-              label="Applicable Add-ons"
-            >
-              <Select
-                mode="multiple"
-                placeholder="Select add-ons"
-                style={{ width: '100%' }}
-                tagRender={(props) => {
-                  const addon = availableAddOns.find(a => a.id === props.value);
-                  return (
-                    <Tag closable={props.closable} onClose={props.onClose}>
-                      {addon ? addon.name : props.value}
-                    </Tag>
-                  );
-                }}
+                <Select>
+                  <Option value="percentage">Percentage Discount</Option>
+                  <Option value="fixed">Fixed Amount</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="value"
+                label="Value"
+                rules={[
+                  { required: true, message: 'Value is required' },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || value <= 0) {
+                        return Promise.reject('Value must be greater than 0');
+                      }
+                      if (getFieldValue('type') === 'percentage' && value > 100) {
+                        return Promise.reject('Percentage cannot exceed 100%');
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+                extra={form.getFieldValue('type') === 'percentage' ? 'Percentage value (0-100)' : 'Amount in currency'}
               >
-                {availableAddOns.map((addon) => (
-                  <Option key={addon.id} value={addon.id}>
-                    {addon.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-        </Row>
+                <InputNumber style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="minPurchaseAmount"
+                label="Minimum Purchase Amount"
+              >
+                <InputNumber style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="maxUsage"
+                label="Maximum Usage"
+                extra="Leave empty for unlimited usage"
+              >
+                <InputNumber style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="usageCount"
+                label="Current Usage Count"
+                extra="Number of times this voucher has been used"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  disabled={!id}
+                />
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="startDate"
+                label="Start Date"
+              >
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="endDate"
+                label="End Date"
+              >
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
 
-        <Form.Item style={{ marginTop: 24 }}>
-          <Space>
-            <Button onClick={() => router.push('/vouchers')}>
-              Cancel
-            </Button>
-            <Button type="primary" htmlType="submit" loading={loading}>
-              {id ? 'Update' : 'Create'} Voucher
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
-    </Card>
+          <Divider />
+          <Title level={5}>Restrictions</Title>
+
+          <Row gutter={16}>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="customerRestriction"
+                label="Customer Restriction"
+              >
+                <Select>
+                  <Option value="all">All Customers</Option>
+                  <Option value="new">New Customers Only</Option>
+                  <Option value="existing">Existing Customers Only</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="stackable"
+                label="Stackable with other vouchers/discounts"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+            </Col>
+            
+            {form.getFieldValue('stackable') && (
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="stackPriority"
+                  label="Stack Priority"
+                  extra="Lower number = higher priority (applied first)"
+                >
+                  <InputNumber 
+                    style={{ width: '100%' }} 
+                    min={1}
+                  />
+                </Form.Item>
+              </Col>
+            )}
+            
+            <Col xs={24}>
+              <Form.Item
+                name="active"
+                label="Active"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider />
+          <Title level={5}>Applicable Services & Add-ons</Title>
+          <Text type="secondary" style={{ marginBottom: 16, display: 'block' }}>
+            If none selected, voucher applies to all services and add-ons
+          </Text>
+          
+          <Row gutter={16}>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="applicableServices"
+                label="Applicable Services"
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="Select services"
+                  style={{ width: '100%' }}
+                  tagRender={(props) => {
+                    const service = availableServices.find(s => s.id === props.value);
+                    return (
+                      <Tag closable={props.closable} onClose={props.onClose}>
+                        {service ? service.name : props.value}
+                      </Tag>
+                    );
+                  }}
+                >
+                  {availableServices.map((service) => (
+                    <Option key={service.id} value={service.id}>
+                      {service.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="applicableAddOns"
+                label="Applicable Add-ons"
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="Select add-ons"
+                  style={{ width: '100%' }}
+                  tagRender={(props) => {
+                    const addon = availableAddOns.find(a => a.id === props.value);
+                    return (
+                      <Tag closable={props.closable} onClose={props.onClose}>
+                        {addon ? addon.name : props.value}
+                      </Tag>
+                    );
+                  }}
+                >
+                  {availableAddOns.map((addon) => (
+                    <Option key={addon.id} value={addon.id}>
+                      {addon.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item style={{ marginTop: 24 }}>
+            <Space>
+              <Button onClick={() => router.push('/vouchers')}>
+                Cancel
+              </Button>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                {id ? 'Update' : 'Create'} Voucher
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Card>
+    </div>
   );
 };
 
