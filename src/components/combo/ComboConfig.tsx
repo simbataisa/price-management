@@ -17,7 +17,7 @@ import {
   Row,
   Col
 } from 'antd';
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 
@@ -230,232 +230,273 @@ const ComboConfig: React.FC = () => {
   };
 
   return (
-    <Card>
-      {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
-      
-      <Title level={4}>{id ? 'Edit' : 'Create'} Combo Package</Title>
-      
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        initialValues={{
-          ...combo,
-          dateRange: combo.startDate && combo.endDate ? 
-            [dayjs(combo.startDate), dayjs(combo.endDate)] : undefined
-        }}
-      >
-        <Form.Item
-          name="name"
-          label="Combo Name"
-          rules={[{ required: true, message: 'Please enter a combo name' }]}
-        >
-          <Input />
-        </Form.Item>
-        
-        <Form.Item
-          name="description"
-          label="Description"
-        >
-          <TextArea rows={3} />
-        </Form.Item>
-        
-        <Row gutter={16}>
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="discountType"
-              label="Discount Type"
-              rules={[{ required: true }]}
-            >
-              <Select>
-                <Select.Option value="percentage">Percentage Discount</Select.Option>
-                <Select.Option value="fixed">Fixed Amount</Select.Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="discountValue"
-              label="Discount Value"
-              rules={[
-                { required: true, message: 'Please enter discount value' },
-                {
-                  validator: (_, value) => {
-                    if (value <= 0) {
-                      return Promise.reject('Value must be greater than 0');
-                    }
-                    if (combo.discountType === 'percentage' && value > 100) {
-                      return Promise.reject('Percentage cannot exceed 100%');
-                    }
-                    return Promise.resolve();
-                  }
-                }
-              ]}
-            >
-              <InputNumber 
-                style={{ width: '100%' }} 
-                min={0} 
-                max={combo.discountType === 'percentage' ? 100 : undefined}
-                addonAfter={combo.discountType === 'percentage' ? '%' : '$'}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-        
-        <Row gutter={16}>
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="dateRange"
-              label="Valid Period"
-            >
-              <RangePicker style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-          
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="minDuration"
-              label="Minimum Duration (days)"
-            >
-              <InputNumber style={{ width: '100%' }} min={1} />
-            </Form.Item>
-          </Col>
-        </Row>
-        
-        <Form.Item
-          name="active"
-          valuePropName="checked"
-        >
-          <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
-        </Form.Item>
-        
-        <Divider />
-        <Title level={5}>Combo Items</Title>
-        
-        {(!combo.items || combo.items.length === 0) && (
-          <Alert 
-            message="At least one product must be added to the combo" 
-            type="warning" 
-            style={{ marginBottom: 16 }} 
-          />
-        )}
-        
-        <Space style={{ marginBottom: 16 }}>
-          <Select
-            style={{ width: 250 }}
-            placeholder="Select a product"
-            value={selectedProduct}
-            onChange={setSelectedProduct}
-          >
-            <Select.OptGroup label="Cars">
-              {mockProducts.filter(p => p.category === 'car').map(product => (
-                <Select.Option key={product.id} value={product.id}>
-                  {product.name} (${product.basePrice})
-                </Select.Option>
-              ))}
-            </Select.OptGroup>
-            <Select.OptGroup label="Services">
-              {mockProducts.filter(p => p.category === 'service').map(product => (
-                <Select.Option key={product.id} value={product.id}>
-                  {product.name} (${product.basePrice})
-                </Select.Option>
-              ))}
-            </Select.OptGroup>
-          </Select>
-          
-          <InputNumber
-            min={1}
-            value={quantity}
-            onChange={value => setQuantity(value || 1)}
-            style={{ width: 80 }}
-            placeholder="Qty"
-          />
-          
+    <div className="config-container" style={{ 
+      maxWidth: '1200px', 
+      margin: '0 auto'
+    }}>
+      <Card>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={addItem}
-            disabled={!selectedProduct}
+            icon={<ArrowLeftOutlined />} 
+            onClick={() => router.push('/combos')}
           >
-            Add
+            Back to Combos
           </Button>
-        </Space>
+          <Title level={4} style={{ margin: 0 }}>{id ? 'Edit' : 'Create'} Combo Package</Title>
+          <div style={{ width: 80 }}></div> {/* Spacer for alignment */}
+        </div>
         
-        <List
-          bordered
-          dataSource={combo.items || []}
-          renderItem={item => (
-            <List.Item
-              actions={[
-                <Button 
-                  key="delete" 
-                  type="text" 
-                  danger 
-                  icon={<DeleteOutlined />} 
-                  onClick={() => removeItem(item.productId)}
+        {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
+        
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            ...combo,
+            dateRange: combo.startDate && combo.endDate ? 
+              [dayjs(combo.startDate), dayjs(combo.endDate)] : undefined
+          }}
+        >
+          <Row gutter={[24, 16]}>
+            <Col xs={24} lg={16}>
+              <Card title="Basic Information" bordered={false}>
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} md={16}>
+                    <Form.Item
+                      name="name"
+                      label="Combo Name"
+                      rules={[{ required: true, message: 'Please enter a combo name' }]}
+                    >
+                      <Input />
+                    </Form.Item>
+                  </Col>
+                  
+                  <Col xs={24} md={8}>
+                    <Form.Item
+                      name="active"
+                      label="Status"
+                      valuePropName="checked"
+                    >
+                      <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+                    </Form.Item>
+                  </Col>
+                  
+                  <Col xs={24}>
+                    <Form.Item
+                      name="description"
+                      label="Description"
+                    >
+                      <TextArea rows={3} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Card>
+              
+              <Card title="Discount Settings" bordered={false} style={{ marginTop: 16 }}>
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      name="discountType"
+                      label="Discount Type"
+                      rules={[{ required: true }]}
+                    >
+                      <Select>
+                        <Select.Option value="percentage">Percentage Discount</Select.Option>
+                        <Select.Option value="fixed">Fixed Amount</Select.Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      name="discountValue"
+                      label="Discount Value"
+                      rules={[
+                        { required: true, message: 'Please enter discount value' },
+                        {
+                          validator: (_, value) => {
+                            if (value <= 0) {
+                              return Promise.reject('Value must be greater than 0');
+                            }
+                            if (combo.discountType === 'percentage' && value > 100) {
+                              return Promise.reject('Percentage cannot exceed 100%');
+                            }
+                            return Promise.resolve();
+                          }
+                        }
+                      ]}
+                    >
+                      <InputNumber 
+                        style={{ width: '100%' }} 
+                        min={0} 
+                        max={combo.discountType === 'percentage' ? 100 : undefined}
+                        addonAfter={combo.discountType === 'percentage' ? '%' : '$'}
+                      />
+                    </Form.Item>
+                  </Col>
+                  
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      name="dateRange"
+                      label="Valid Period"
+                    >
+                      <RangePicker style={{ width: '100%' }} />
+                    </Form.Item>
+                  </Col>
+                  
+                  <Col xs={24} md={12}>
+                    <Form.Item
+                      name="minDuration"
+                      label="Minimum Duration (days)"
+                    >
+                      <InputNumber style={{ width: '100%' }} min={1} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Card>
+              
+              <Card title="Combo Items" bordered={false} style={{ marginTop: 16 }}>
+                {(!combo.items || combo.items.length === 0) && (
+                  <Alert 
+                    message="At least one product must be added to the combo" 
+                    type="warning" 
+                    style={{ marginBottom: 16 }} 
+                  />
+                )}
+                
+                <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                  <Col xs={24} md={14}>
+                    <Select
+                      style={{ width: '100%' }}
+                      placeholder="Select a product"
+                      value={selectedProduct}
+                      onChange={setSelectedProduct}
+                    >
+                      <Select.OptGroup label="Cars">
+                        {mockProducts.filter(p => p.category === 'car').map(product => (
+                          <Select.Option key={product.id} value={product.id}>
+                            {product.name} (${product.basePrice})
+                          </Select.Option>
+                        ))}
+                      </Select.OptGroup>
+                      <Select.OptGroup label="Services">
+                        {mockProducts.filter(p => p.category === 'service').map(product => (
+                          <Select.Option key={product.id} value={product.id}>
+                            {product.name} (${product.basePrice})
+                          </Select.Option>
+                        ))}
+                      </Select.OptGroup>
+                    </Select>
+                  </Col>
+                  
+                  <Col xs={10} md={5}>
+                    <InputNumber
+                      min={1}
+                      value={quantity}
+                      onChange={value => setQuantity(value || 1)}
+                      style={{ width: '100%' }}
+                      placeholder="Qty"
+                    />
+                  </Col>
+                  
+                  <Col xs={14} md={5}>
+                    <Button 
+                      type="primary" 
+                      icon={<PlusOutlined />} 
+                      onClick={addItem}
+                      disabled={!selectedProduct}
+                      style={{ width: '100%' }}
+                    >
+                      Add
+                    </Button>
+                  </Col>
+                </Row>
+                
+                <List
+                  bordered
+                  dataSource={combo.items || []}
+                  renderItem={item => (
+                    <List.Item
+                      actions={[
+                        <Button 
+                          key="delete" 
+                          type="text" 
+                          danger 
+                          icon={<DeleteOutlined />} 
+                          onClick={() => removeItem(item.productId)}
+                        />
+                      ]}
+                    >
+                      <List.Item.Meta
+                        title={getProductName(item.productId)}
+                        description={`Quantity: ${item.quantity}`}
+                      />
+                    </List.Item>
+                  )}
+                  locale={{ emptyText: "No items added to this combo yet" }}
+                  style={{ marginBottom: 16 }}
                 />
-              ]}
-            >
-              <List.Item.Meta
-                title={getProductName(item.productId)}
-                description={`Quantity: ${item.quantity}`}
-              />
-            </List.Item>
-          )}
-          locale={{ emptyText: "No items added to this combo yet" }}
-          style={{ marginBottom: 16 }}
-        />
-        
-        <Card style={{ marginBottom: 16 }}>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Statistic 
-                title="Regular Price" 
-                value={calculateTotalPrice()} 
-                precision={2} 
-                prefix="$" 
-              />
+              </Card>
             </Col>
-            <Col span={8}>
-              <Statistic 
-                title="Combo Price" 
-                value={calculateDiscountedPrice()} 
-                precision={2} 
-                prefix="$" 
-                valueStyle={{ color: '#3f8600' }}
-              />
-            </Col>
-            <Col span={8}>
-              <Statistic 
-                title="Savings" 
-                value={calculateTotalPrice() - calculateDiscountedPrice()} 
-                precision={2} 
-                prefix="$" 
-                suffix={combo.discountType === 'percentage' ? `(${combo.discountValue}%)` : ''}
-                valueStyle={{ color: '#cf1322' }}
-              />
+            
+            <Col xs={24} lg={8}>
+              <Card title="Pricing Summary" bordered={false}>
+                <Row gutter={[16, 16]}>
+                  <Col span={24}>
+                    <Statistic 
+                      title="Regular Price" 
+                      value={calculateTotalPrice()} 
+                      precision={2} 
+                      prefix="$" 
+                    />
+                  </Col>
+                  <Col span={24}>
+                    <Statistic 
+                      title="Combo Price" 
+                      value={calculateDiscountedPrice()} 
+                      precision={2} 
+                      prefix="$" 
+                      valueStyle={{ color: '#3f8600' }}
+                    />
+                  </Col>
+                  <Col span={24}>
+                    <Statistic 
+                      title="Savings" 
+                      value={calculateTotalPrice() - calculateDiscountedPrice()} 
+                      precision={2} 
+                      prefix="$" 
+                      suffix={combo.discountType === 'percentage' ? `(${combo.discountValue}%)` : ''}
+                      valueStyle={{ color: '#cf1322' }}
+                    />
+                  </Col>
+                </Row>
+              </Card>
+              
+              <Card title="Actions" bordered={false} style={{ marginTop: 16 }}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Button 
+                    type="primary" 
+                    htmlType="submit" 
+                    loading={loading}
+                    disabled={!combo.items || combo.items.length === 0}
+                    style={{ width: '100%' }}
+                  >
+                    {id ? 'Update' : 'Create'} Combo
+                  </Button>
+                  <Button 
+                    onClick={() => router.push('/combos')}
+                    style={{ width: '100%' }}
+                  >
+                    Cancel
+                  </Button>
+                </Space>
+              </Card>
             </Col>
           </Row>
-        </Card>
-        
-        <Form.Item>
-          <Space>
-            <Button onClick={() => router.push('/combos')}>
-              Cancel
-            </Button>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
-              loading={loading}
-              disabled={!combo.items || combo.items.length === 0}
-            >
-              {id ? 'Update' : 'Create'} Combo
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
-    </Card>
+        </Form>
+      </Card>
+    </div>
   );
 };
 

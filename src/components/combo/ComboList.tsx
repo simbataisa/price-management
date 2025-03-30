@@ -8,17 +8,15 @@ import {
   Space,
   Popconfirm,
   Alert,
-  Spin
 } from 'antd';
+import { ColumnsType } from 'antd/es/table';
 import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
-  InfoCircleOutlined
 } from '@ant-design/icons';
 import { useLoading } from '../../contexts/LoadingContext';
 import { useRouter } from 'next/router';
-import { ColumnsType } from 'antd/es/table';
 
 interface ComboItem {
   productId: string;
@@ -202,12 +200,14 @@ const ComboList: React.FC = () => {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
+      ellipsis: true,
     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
-      responsive: ['sm'],
+      responsive: ['md'],
+      ellipsis: true,
       render: (text: string) => truncateText(text, 50),
     },
     {
@@ -220,7 +220,7 @@ const ComboList: React.FC = () => {
     {
       title: 'Status',
       key: 'status',
-      responsive: ['md'],
+      responsive: ['sm'],
       render: (_: any, record: Combo) => (
         <Tag color={record.active ? 'success' : 'default'}>
           {record.active ? 'Active' : 'Inactive'}
@@ -230,9 +230,10 @@ const ComboList: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      align: 'right' as const,
+      fixed: 'right',
+      width: 100,
       render: (_: any, record: Combo) => (
-        <Space size="middle">
+        <Space size="small">
           <Button 
             type="text" 
             icon={<EditOutlined />} 
@@ -270,13 +271,22 @@ const ComboList: React.FC = () => {
 
       {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
 
-      <Table 
-        columns={columns} 
-        dataSource={combos} 
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-        loading={loading}
-      />
+      <div className="table-responsive">
+        <Table 
+          columns={columns} 
+          dataSource={combos} 
+          rowKey="id"
+          pagination={{ 
+            pageSize: 10,
+            responsive: true,
+            position: ['bottomCenter']
+          }}
+          loading={loading}
+          scroll={{ x: 800, scrollToFirstRowOnChange: true }}
+          size="small"
+          sticky
+        />
+      </div>
     </Card>
   );
 };

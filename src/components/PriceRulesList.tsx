@@ -10,6 +10,7 @@ import {
   Alert,
   Spin,
 } from "antd";
+import { ColumnsType } from "antd/es/table";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { useRouter } from "next/router";
 import { PriceRule } from "../types/pricing";
@@ -48,16 +49,19 @@ const PriceRulesList: React.FC = () => {
     }
   };
 
-  const columns = [
+  // Define columns for Ant Design Table with proper typing
+  const columns: ColumnsType<PriceRule> = [
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
+      ellipsis: true,
     },
     {
       title: "Type",
       dataIndex: "type",
       key: "type",
+      responsive: ['md'],
       render: (type: string) => (
         <Tag
           color={
@@ -88,6 +92,7 @@ const PriceRulesList: React.FC = () => {
       title: "Status",
       key: "active",
       dataIndex: "active",
+      responsive: ['md'],
       render: (active: boolean) => (
         <Tag color={active ? "success" : "default"}>
           {active ? "Active" : "Inactive"}
@@ -98,18 +103,22 @@ const PriceRulesList: React.FC = () => {
       title: "Priority",
       dataIndex: "priority",
       key: "priority",
+      responsive: ['lg'],
     },
     {
       title: "Level",
       dataIndex: "level",
       key: "level",
+      responsive: ['lg'],
       render: (level: string) => <Tag color="processing">{level}</Tag>,
     },
     {
       title: "Actions",
       key: "actions",
+      fixed: 'right',
+      width: 100,
       render: (_: any, record: PriceRule) => (
-        <Space size="middle">
+        <Space size="small">
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -158,6 +167,9 @@ const PriceRulesList: React.FC = () => {
         rowKey="id"
         pagination={{ pageSize: 10 }}
         loading={loading}
+        scroll={{ x: 800, scrollToFirstRowOnChange: true }}
+        size="small"
+        sticky
       />
     </Card>
   );

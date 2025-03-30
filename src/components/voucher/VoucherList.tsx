@@ -5,10 +5,11 @@ import {
   Tag,
   Button,
   Space,
-  Spin,
   Alert,
   Popconfirm,
+  Card,
 } from "antd";
+import { ColumnsType } from "antd/es/table";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { useRouter } from "next/router";
 
@@ -78,11 +79,12 @@ const VoucherList: React.FC = () => {
     return new Date(date).toLocaleDateString();
   };
 
-  const columns = [
+  const columns: ColumnsType<Voucher> = [
     {
       title: "Code",
       dataIndex: "code",
       key: "code",
+      ellipsis: true,
       render: (text: string) => (
         <Typography.Text strong>{text}</Typography.Text>
       ),
@@ -91,6 +93,8 @@ const VoucherList: React.FC = () => {
       title: "Description",
       dataIndex: "description",
       key: "description",
+      ellipsis: true,
+      responsive: ['md'],
     },
     {
       title: "Value",
@@ -102,18 +106,21 @@ const VoucherList: React.FC = () => {
     {
       title: "Usage",
       key: "usage",
+      responsive: ['md'],
       render: (_: any, record: Voucher) =>
         `${record.usageCount} / ${record.maxUsage || "∞"}`,
     },
     {
       title: "Valid Period",
       key: "period",
+      responsive: ['lg'],
       render: (_: any, record: Voucher) =>
         `${formatDate(record.startDate)} - ${formatDate(record.endDate)}`,
     },
     {
       title: "Status",
       key: "status",
+      responsive: ['sm'],
       render: (_: any, record: Voucher) => (
         <Tag color={record.active ? "success" : "default"}>
           {record.active ? "Active" : "Inactive"}
@@ -123,8 +130,10 @@ const VoucherList: React.FC = () => {
     {
       title: "Actions",
       key: "actions",
+      fixed: 'right',
+      width: 100,
       render: (_: any, record: Voucher) => (
-        <Space>
+        <Space size="small">
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -144,7 +153,7 @@ const VoucherList: React.FC = () => {
   ];
 
   return (
-    <div>
+    <Card>
       <div
         style={{
           display: "flex",
@@ -173,8 +182,11 @@ const VoucherList: React.FC = () => {
         rowKey="id"
         locale={{ emptyText: "No vouchers found" }}
         loading={loading}
+        scroll={{ x: 800, scrollToFirstRowOnChange: true }}
+        size="small"
+        sticky
       />
-    </div>
+    </Card>
   );
 };
 
